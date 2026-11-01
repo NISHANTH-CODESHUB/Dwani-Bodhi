@@ -32,7 +32,7 @@ def process_slate(db: Session, photo_id: str) -> dict:
         photo.status = "error"
         db.commit()
         return {"error": "missing blob"}
-    crops, meta = detect_and_crop(get_store().get(blob.key))
+    crops, meta = detect_and_crop(get_store(db).get(blob.key))
     children = {c.aruco_slot: c for c in db.scalars(select(Child).where(
         Child.classroom_id == photo.classroom_id, Child.deleted_at.is_(None)))}
     problems = [{"problem_id": f"p{i + 1}", **p} for i, p in enumerate(photo.problems)]
@@ -46,7 +46,7 @@ def process_slate(db: Session, photo_id: str) -> dict:
             entry["skipped"] = "no consented child for this marker"
             continue
         key = f"slates/{photo.classroom_id}/{photo_id}/{crop.marker_id}.jpg"
-        get_store().put(key, crop.jpeg, "image/jpeg")
+        get_store(db).put(key, crop.jpeg, "image/jpeg")
         db.add(Blob(kind="slate_crop", slate_photo_id=photo_id, key=key, mime="image/jpeg",
                     size=len(crop.jpeg), sha256=sha256(crop.jpeg),
                     delete_after=utcnow() + timedelta(days=get_settings().slate_crop_retention_days)))
@@ -78,7 +78,7 @@ def process_slate(db: Session, photo_id: str) -> dict:
             touched.add(child.id)
     photo.status, photo.result = "done", result
     # Privacy (GUIDE §13.1): the full classroom photo may show faces. Only per-child answer crops are kept.
-    get_store().delete(blob.key)
+    get_store(db).delete(blob.key)
     blob.deleted_at = utcnow()
     db.commit()
     for cid in touched:

@@ -1,0 +1,15 @@
+# Python packages for the Vercel serverless API (api/index.py → services/api).
+# Docker/VM deployments install services/api/pyproject.toml instead (adds PyAV + the optional speech model).
+fastapi>=0.115
+python-multipart>=0.0.9
+pydantic>=2.7
+pydantic-settings>=2.3
+sqlalchemy>=2.0.30
+alembic>=1.13
+psycopg[binary]>=3.2
+pyjwt>=2.8
+pyyaml>=6.0
+numpy>=1.26
+opencv-python-headless>=4.9
+anthropic>=0.40
+httpx>=0.27

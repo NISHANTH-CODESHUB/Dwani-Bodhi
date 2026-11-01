@@ -130,8 +130,11 @@ export default function KioskPage() {
   }, [childId, room.id]);
 
   // Cleanup: close the mic, stop speech, release wake lock, leave full screen; close an abandoned session.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Must be re-armed on (re)mount: React StrictMode mounts → cleans up → mounts again, and a flag left
+    // false here makes start() return silently, so the kiosk sat on "Start" forever.
+    alive.current = true;
+    return () => {
       alive.current = false;
       micRef.current?.close();
       stopSpeaking();
@@ -140,9 +143,8 @@ export default function KioskPage() {
 
       void wakeLock.current?.release().catch(() => undefined);
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
-    },
-    [],
-  );
+    };
+  }, []);
 
   const endSession = async () => {
     const sid = sessionRef.current;

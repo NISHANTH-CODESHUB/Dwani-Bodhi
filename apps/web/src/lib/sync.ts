@@ -253,6 +253,9 @@ async function markRejected(u: UploadUnit, reason: string): Promise<void> {
   }
 }
 
+/** Server jobs still queued after the last upload (serverless deploys score inside requests). */
+let pendingJobs = 0;
+
 async function uploadBatch(deviceId: string, batch: UploadUnit[]): Promise<void> {
   const { sessions, photos } = await loadBundles(batch);
   for (const p of photos) if (!p.image) await markRejected({ kind: 'photo', id: p.photo.id, bytes: 0 }, 'image missing');
@@ -263,6 +266,7 @@ async function uploadBatch(deviceId: string, batch: UploadUnit[]): Promise<void>
   for (const p of parts) form.append(p.name, p.blob, p.filename);
   const bytes = parts.reduce((n, p) => n + p.blob.size, 0);
   const result = await api.sync(form, bytes);
+  pendingJobs = result.jobs?.pending ?? 0;
   const o = interpretResult(manifest, result);
   const dropAudio = audioToDelete(manifest, o);
   await db.transaction('rw', [db.sessions, db.responses, db.audio, db.slatePhotos, db.images], async () => {
@@ -295,6 +299,19 @@ async function uploadAll(): Promise<void> {
       if (batch.length > 1) queue.unshift(...batch.map((u) => [u]));
       else await markRejected(batch[0], `${he.status}: ${he.detail}`);
     }
+  }
+}
+
+/**
+ * Serverless deploys have no background worker: ask the server to finish queued scoring so today's list,
+ * profiles and the review queue are up to date right after a sync. Stops when nothing is left or no
+ * progress is made; anything remaining is finished by the next sync or the daily cron.
+ */
+async function pumpJobs(): Promise<void> {
+  for (let i = 0; i < 4 && pendingJobs > 0; i += 1) {
+    const r = await api.runJobs();
+    pendingJobs = r.pending;
+    if (r.ran === 0) break;
   }
 }
 
@@ -364,13 +381,16 @@ async function doSync(manual: boolean): Promise<boolean> {
     setAuth({ ...live, user: me.user, classrooms: me.classrooms });
     if (me.content_version && me.content_version !== cachedContentVersion()) serverContentVersion = me.content_version;
     await closeStaleSessions();
-    if (auth.user.role === 'teacher') {
-      await pushRoster();
-      await uploadAll();
+    await pushRoster();
+    await uploadAll();
+    try {
+      await pumpJobs();
+    } catch {
+      /* best effort: results arrive with a later sync */
     }
     await refreshBootstrap();
     const cid = getClassroomId();
-    if (cid && auth.user.role === 'teacher') await refreshClassroom(cid);
+    if (cid) await refreshClassroom(cid);
     const now = new Date().toISOString();
     await kvSet(KV_KEYS.lastSync, now);
     attempt = 0;

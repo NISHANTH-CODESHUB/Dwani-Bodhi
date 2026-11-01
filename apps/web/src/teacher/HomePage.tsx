@@ -67,15 +67,37 @@ export function HomePage() {
         <div className="hero-text">
           <div className="hero-kicker">{hi.todayCheck}</div>
           <div className="hero-title">
-            {list.length === 0 ? hi.todayNoneShort : doneCount >= list.length ? hi.todayAllDone : hi.todayRemaining(list.length - doneCount)}
+            {!t
+              ? hi.todayNoneShort
+              : kids.length === 0
+                ? hi.heroAddKids
+                : consented === 0
+                  ? hi.heroConsent
+                  : list.length === 0
+                    ? hi.todayNoneShort
+                    : doneCount >= list.length
+                      ? hi.todayAllDone
+                      : hi.todayRemaining(list.length - doneCount)}
           </div>
           {nextUp ? (
             <button className="btn btn-hero" onClick={() => nav(`/kiosk/${nextUp.child_id}`)}>
               <Icon name="play" size={18} />
               {hi.startWith(childLabel(byId.get(nextUp.child_id)))}
             </button>
+          ) : !t ? (
+            <span className="hero-note">{hi.firstSyncNeeded}</span>
+          ) : kids.length === 0 ? (
+            <button className="btn btn-hero" onClick={() => nav('/roster/new')}>
+              <Icon name="plus" size={18} />
+              {hi.addChild}
+            </button>
+          ) : consented === 0 ? (
+            <button className="btn btn-hero" onClick={() => nav('/roster?filter=consent')}>
+              <Icon name="pen" size={18} />
+              {hi.heroConsent}
+            </button>
           ) : (
-            <span className="hero-note">{list.length ? hi.todayGreat : hi.firstSyncNeeded}</span>
+            <span className="hero-note">{list.length ? hi.todayGreat : hi.heroNoneNote}</span>
           )}
         </div>
         <ProgressRing done={doneCount} total={list.length} size={88} />
@@ -107,7 +129,15 @@ export function HomePage() {
           {/* ---- today's children -------------------------------------------------------- */}
           <Panel title={hi.todayListTitle} icon="users" hint={hi.todayListHint}>
             {!t && <EmptyState icon="sync" title={hi.firstSyncNeeded} />}
-            {t && list.length === 0 && <EmptyState icon="checkCircle" title={hi.todayNone} />}
+            {t && list.length === 0 && (
+              <EmptyState icon={kids.length ? 'checkCircle' : 'users'} title={kids.length ? hi.todayNone : hi.heroAddKidsNote}>
+                {kids.length === 0 && (
+                  <Link to="/roster/new" className="btn btn-primary">
+                    {hi.addChild}
+                  </Link>
+                )}
+              </EmptyState>
+            )}
             <ul className="people">
               {list.map((c) => {
                 const kid = byId.get(c.child_id);

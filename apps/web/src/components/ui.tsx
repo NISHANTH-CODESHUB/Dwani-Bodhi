@@ -6,9 +6,7 @@ import { useAuth, useClassroom } from '../lib/auth';
 import { avatarColor, avatarText, BAND_LABEL, skillBand, type SkillBand } from '../lib/childUi';
 import { KV_KEYS, kvGet } from '../lib/db';
 import { runSync, useSyncStatus } from '../lib/sync';
-import { pendingRequestCount, useNotifications } from '../lib/notifications';
 import { LogoutButton } from '../teacher/LogoutButton';
-import { NotificationBell } from './NotificationBell';
 import { useLive } from './common';
 import { Icon, type IconName } from './icons';
 
@@ -52,11 +50,9 @@ interface NavItem {
 }
 
 function useNavSections(): { title: string; items: NavItem[] }[] {
-  const auth = useAuth();
   const room = useClassroom();
   const cid = room?.id ?? '';
   const unsure = useLive(() => (cid ? kvGet<number>(KV_KEYS.unsureCount(cid)) : Promise.resolve(undefined)), [cid], undefined);
-  const notes = useNotifications();
   const support = {
     title: hi.navSupport,
     items: [
@@ -64,23 +60,6 @@ function useNavSections(): { title: string; items: NavItem[] }[] {
       { to: '/pin', icon: 'lock' as const, label: hi.navPin },
     ],
   };
-  if (auth && auth.user.role === 'admin') {
-    return [
-      {
-        title: hi.navOverview,
-        items: [
-          { to: '/admin', icon: 'chart', label: hi.navDashboard, end: true },
-          { to: '/admin/students', icon: 'users', label: hi.navStudents },
-          { to: '/admin/teachers', icon: 'school', label: hi.navTeachers },
-        ],
-      },
-      {
-        title: hi.roles.admin,
-        items: [{ to: '/admin/accounts', icon: 'shield', label: hi.navAdmin, badge: pendingRequestCount(notes) }],
-      },
-      support,
-    ];
-  }
   if (!room) return [support];
   return [
     {
@@ -130,7 +109,7 @@ function SideNav({ open, onClose }: { open: boolean; onClose: () => void }) {
           </button>
         </div>
 
-        {auth?.user.role === 'teacher' && (
+        {auth && (
           <button className="class-switch" onClick={() => nav('/classes')} title={hi.changeClass}>
             <Icon name="school" size={18} />
             <span className="class-switch-text">
@@ -165,7 +144,7 @@ function SideNav({ open, onClose }: { open: boolean; onClose: () => void }) {
               </span>
               <span className="user-text">
                 <span className="user-name">{name}</span>
-                <span className="user-role">{hi.roles[auth.user.role] ?? auth.user.role}</span>
+                <span className="user-role">{hi.roleTeacher}</span>
               </span>
               <LogoutButton compact />
             </div>
@@ -182,7 +161,7 @@ function TabBar() {
   const auth = useAuth();
   const cid = room?.id ?? '';
   const unsure = useLive(() => (cid ? kvGet<number>(KV_KEYS.unsureCount(cid)) : Promise.resolve(undefined)), [cid], undefined);
-  if (!room || auth?.user.role !== 'teacher') return null;
+  if (!room || !auth) return null;
   const tabs: NavItem[] = [
     { to: '/', icon: 'home', label: hi.tabHome, end: true },
     { to: '/roster', icon: 'users', label: hi.tabClass },
@@ -237,7 +216,7 @@ export function AppShell({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [drawer]);
-  const hasTabs = !!room && auth?.user.role === 'teacher';
+  const hasTabs = !!room && !!auth;
 
   return (
     <div className={`shell ${hasTabs ? 'shell-tabs' : ''}`}>
@@ -259,7 +238,6 @@ export function AppShell({
           </div>
           <div className="appbar-actions">
             {actions}
-            <NotificationBell />
             <span className="appbar-sync">
               <SyncPill />
             </span>

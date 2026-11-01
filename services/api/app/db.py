@@ -9,6 +9,7 @@ from pathlib import Path
 from sqlalchemy import JSON, create_engine, event
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from .config import get_settings
 
@@ -33,6 +34,8 @@ def get_engine():
             if path and path != ":memory:":
                 Path(path).parent.mkdir(parents=True, exist_ok=True)
             kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
+        elif s.db_null_pool:
+            kwargs["poolclass"] = NullPool  # serverless: use the provider's pooled endpoint (e.g. Neon -pooler)
         else:
             kwargs.update(pool_size=10, max_overflow=20)
         _engine = create_engine(s.database_url, **kwargs)

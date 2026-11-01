@@ -44,9 +44,11 @@ def enqueue(db: Session, kind: str, payload: dict, dedupe_key: str | None = None
     return job
 
 
-def claim(db: Session, queues: list[str], worker_id: str) -> Job | None:
+def claim(db: Session, queues: list[str], worker_id: str, horizon_s: float = 0.0) -> Job | None:
+    """Take the next due job. `horizon_s` also takes jobs due within that many seconds (inline runs skip the
+    short batching delay of update_learner instead of leaving it for a worker that does not exist)."""
     s = get_settings()
-    cond = and_(Job.queue.in_(queues), Job.status == "queued", Job.run_after <= now())
+    cond = and_(Job.queue.in_(queues), Job.status == "queued", Job.run_after <= now() + timedelta(seconds=horizon_s))
     if not s.is_sqlite:
         job = db.scalar(select(Job).where(cond).order_by(Job.run_after).limit(1).with_for_update(skip_locked=True))
         if job is None:

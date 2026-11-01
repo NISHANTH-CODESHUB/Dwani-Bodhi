@@ -1,12 +1,9 @@
 // API shapes, mirrored from services/api (the Python files are the source of truth).
 
-export type Role = 'teacher' | 'admin';
-
 export interface User {
   id: string;
-  role: Role;
+  role: 'teacher';
   display_name: string;
-  org_unit_id: string | null;
 }
 
 export interface ClassroomInfo {
@@ -360,94 +357,39 @@ export interface SyncResult {
   duplicates: string[];
   rejected: { id: string; reason: string }[];
   content_version: string;
+  /** Serverless deploys score uploads inside the request; `pending` jobs are still waiting. */
+  jobs?: JobsState;
 }
 
-// ------------------------------------------------------------------ admin: accounts + hierarchy
-export type OrgKind = 'state' | 'district' | 'block' | 'cluster';
-
-export interface OrgUnitOut {
-  id: string;
-  kind: OrgKind;
-  name: string;
-  code: string | null;
-  parent_id: string | null;
+export interface JobsState {
+  ran: number;
+  pending: number;
 }
 
-export interface SchoolOut {
-  id: string;
-  name: string;
-  udise_code: string | null;
-  org_unit_id: string | null;
-  region_profile: string;
-}
-
-export interface AdminClassroom {
-  id: string;
-  name: string;
+// ------------------------------------------------------------------------------ accounts + classes
+export interface ClassroomBody {
+  school_name: string;
+  class_name: string;
   grades: number[];
-  school_id: string;
-  school: string;
-  teachers: { id: string; display_name: string }[];
+  region_profile?: string;
 }
 
-export interface AdminUser extends User {
-  active: boolean;
-  /** Self-registered, waiting for approval by an admin above. */
-  pending: boolean;
-  /** The admin a sign-up request was sent to. */
-  approver: { id: string; display_name: string } | null;
-  created_at: string | null;
-  classrooms: { id: string; name: string; school: string }[];
-  /** True when the caller sits above this account in the hierarchy (reset PIN, deactivate, reassign). */
-  can_manage: boolean;
-  is_self: boolean;
-}
-
-export interface NewUserBody {
-  role: Role;
-  phone: string;
-  display_name: string;
-  pin?: string;
-  org_unit_id?: string | null;
-  classroom_ids?: string[];
-}
-
-export interface SignupOptions {
-  units: { id: string; kind: OrgKind; name: string; parent_id: string | null }[];
-  classrooms: { id: string; name: string; school: string; org_unit_id: string | null }[];
-}
-
-export interface SignupBody {
-  role: Role;
+export interface SignupBody extends ClassroomBody {
   display_name: string;
   phone: string;
   pin: string;
-  org_unit_id?: string | null;
-  classroom_ids?: string[];
-  approver_id?: string;
 }
 
-export interface Approver {
+export interface ClassroomPatch {
+  name?: string;
+  grades?: number[];
+  region_profile?: string;
+  daily_kiosk_budget_min?: number;
+}
+
+export interface RegionOption {
   id: string;
-  display_name: string;
-  /** Unit name, or null for a top-level admin. */
-  unit: string | null;
-}
-
-// ------------------------------------------------------------------------------ notifications
-export interface AppNotification {
-  id: string;
-  kind: 'signup_request' | 'admin_joined' | 'account_approved' | string;
-  title: string;
-  body: string;
-  subject_user_id: string | null;
-  created_at: string | null;
-  read: boolean;
-}
-
-export interface NotificationList {
-  unread: number;
-  items: AppNotification[];
+  name: string;
 }
 
 // ------------------------------------------------------------------------------ activity
@@ -544,62 +486,4 @@ export interface ClassActivity {
   };
   daily: DailyPoint[];
   students: StudentRow[];
-}
-
-export interface TeacherRow {
-  id: string;
-  display_name: string;
-  active: boolean;
-  pending: boolean;
-  last_login_at: string | null;
-  created_at: string | null;
-  classes: { id: string; name: string; school: string }[];
-  students: number;
-  sessions_7d: number;
-  sessions_30d: number;
-  last_active: string | null;
-}
-
-export interface AdminDashboard {
-  totals: {
-    schools: number;
-    classrooms: number;
-    teachers: number;
-    teachers_pending: number;
-    students: number;
-    students_assessed: number;
-    sessions_7d: number;
-    sessions_30d: number;
-  };
-  daily: DailyPoint[];
-  levels: { literacy: { level: string; n: number }[]; numeracy: { level: string; n: number }[] };
-  teachers: TeacherRow[];
-  recent: {
-    session_id: string;
-    student_id: string;
-    register_no: string | null;
-    classroom: string;
-    school: string;
-    at: string | null;
-    answers: number;
-  }[];
-}
-
-export interface AdminStudentPage {
-  total: number;
-  limit: number;
-  offset: number;
-  students: StudentRow[];
-  schools: { id: string; name: string }[];
-  classrooms: { id: string; name: string; school_id: string; school: string }[];
-}
-
-export interface StudentFilter {
-  school_id?: string;
-  classroom_id?: string;
-  grade?: number;
-  consent?: ConsentStatus | '';
-  q?: string;
-  limit?: number;
-  offset?: number;
 }

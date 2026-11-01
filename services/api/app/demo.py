@@ -34,12 +34,12 @@ from .content.schema import TAP_TYPES
 from .db import SessionLocal, create_all
 from .diagnosis.bugs import DEFAULT_LIBRARY
 from .jobs.worker import drain
-from .models import Classroom, ClassroomTeacher, OrgUnit, School, User
+from .models import Classroom, ClassroomTeacher, School, User
 from .security import generate_pin, hash_phone, hash_pin, issue_token
 from .speech.mutations import generate_candidates
 from .vision.slates import make_marker_card
 
-DEMO_NAMES = {"teacher": "Sunita Didi", "admin": "Admin (demo)"}
+DEMO_NAMES = {"teacher": "Sunita Didi"}
 DEMO_SCHOOL = "Primary School Rampur (demo)"
 CREDENTIALS_FILE = Path(os.environ.get("DEMO_CREDENTIALS_FILE", REPO_ROOT / "data" / "demo-credentials.txt"))
 
@@ -57,12 +57,7 @@ def new_credentials() -> dict[str, dict[str, str]]:
 
 def _demo_users(db, room_id: str) -> dict[str, User]:
     teacher_id = db.scalar(select(ClassroomTeacher.user_id).where(ClassroomTeacher.classroom_id == room_id))
-    out = {"teacher": db.get(User, teacher_id)} if teacher_id else {}
-    for role in ("admin",):
-        u = db.scalar(select(User).where(User.role == role, User.display_name.in_([DEMO_NAMES[role], "Admin"])))
-        if u:
-            out[role] = u
-    return out
+    return {"teacher": db.get(User, teacher_id)} if teacher_id else {}
 
 
 def _apply_credentials(users: dict[str, User], creds: dict[str, dict[str, str]]) -> None:
@@ -138,29 +133,14 @@ def ensure_org(db, reset_credentials: bool = False) -> dict:
             _apply_credentials(users, creds)
             db.commit()
         return {"classroom_id": room.id, "teacher_id": users["teacher"].id, "credentials": creds}
-    state = OrgUnit(kind="state", name="Uttar Pradesh")
-    db.add(state)
-    db.flush()
-    district = OrgUnit(kind="district", name="Hardoi", parent_id=state.id)
-    db.add(district)
-    db.flush()
-    block = OrgUnit(kind="block", name="Sandila", parent_id=district.id)
-    db.add(block)
-    db.flush()
-    cluster = OrgUnit(kind="cluster", name="Cluster 4", parent_id=block.id)
-    db.add(cluster)
-    db.flush()
-    school = School(name=DEMO_SCHOOL, org_unit_id=cluster.id, region_profile="west-central-up")
+    school = School(name=DEMO_SCHOOL, region_profile="west-central-up")
     db.add(school)
     db.flush()
     room = Classroom(school_id=school.id, name="Class 1-2", grades=[1, 2], daily_kiosk_budget_min=12)
     db.add(room)
     db.flush()
     creds = new_credentials()
-    users = {
-        "teacher": User(role="teacher", display_name=DEMO_NAMES["teacher"]),
-        "admin": User(role="admin", display_name=DEMO_NAMES["admin"]),
-    }
+    users = {"teacher": User(role="teacher", display_name=DEMO_NAMES["teacher"])}
     _apply_credentials(users, creds)
     for u in users.values():
         u.credentials_changed_at = None

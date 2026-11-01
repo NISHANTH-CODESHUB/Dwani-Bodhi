@@ -21,6 +21,7 @@ from ..security import Principal, can_access_classroom, current_principal
 from ..services.common import pack
 from ..services.scoring import score_tap
 from ..storage import get_store, sha256
+from .jobs import run_inline_jobs
 
 log = logging.getLogger("sync")
 router = APIRouter(prefix="/v1", tags=["sync"])
@@ -119,13 +120,16 @@ async def sync(request: Request, p: Principal = Depends(current_principal), db: 
     files = {k: v for k, v in form.multi_items() if k in wanted and isinstance(v, UploadFile)}
     blobs = {k: await f.read(MAX_IMAGE_BYTES + 1) for k, f in files.items()}
     # DB and blob-store calls block (boto3 for S3): run them off the event loop so other requests proceed.
-    return await run_in_threadpool(_apply, manifest, files, blobs, p, db)
+    result = await run_in_threadpool(_apply, manifest, files, blobs, p, db)
+    # Serverless: no worker process, so score what was just uploaded before answering (time-boxed).
+    result["jobs"] = await run_in_threadpool(run_inline_jobs)
+    return result
 
 
 def _apply(manifest: Manifest, files: dict[str, UploadFile], blobs: dict[str, bytes], p: Principal,
            db: Session) -> dict:
     cp = pack()
-    store = get_store()
+    store = get_store(db)
     accepted: dict[str, list[str]] = {"sessions": [], "responses": [], "slate_photos": []}
     duplicates: list[str] = []
     rejected: list[dict] = []

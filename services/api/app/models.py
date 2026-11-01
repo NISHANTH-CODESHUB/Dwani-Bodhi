@@ -1,6 +1,6 @@
 """ORM models (guide §11.1). Child names are NEVER stored server-side — only UUIDs.
 
-Hierarchy for multi-tenant scale: OrgUnit (state → district → block → cluster) → School → Classroom.
+Teacher → (School) → Classroom → Child. Teachers create their own account, school and classes.
 """
 
 from __future__ import annotations
@@ -16,10 +16,10 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
-    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -37,21 +37,11 @@ def new_id() -> str:
 UUID = String(36)
 
 
-class OrgUnit(Base):
-    __tablename__ = "org_unit"
-    id: Mapped[str] = mapped_column(UUID, primary_key=True, default=new_id)
-    kind: Mapped[str] = mapped_column(String(16))  # state | district | block | cluster
-    name: Mapped[str] = mapped_column(String(200))
-    code: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    parent_id: Mapped[str | None] = mapped_column(ForeignKey("org_unit.id"), nullable=True, index=True)
-
-
 class School(Base):
+    """Created by a teacher when they sign up or add a class (a name only; no external identifiers)."""
     __tablename__ = "school"
     id: Mapped[str] = mapped_column(UUID, primary_key=True, default=new_id)
     name: Mapped[str] = mapped_column(String(200))
-    udise_code: Mapped[str | None] = mapped_column(String(32), nullable=True, unique=True)
-    org_unit_id: Mapped[str | None] = mapped_column(ForeignKey("org_unit.id"), nullable=True, index=True)
     region_profile: Mapped[str] = mapped_column(String(64), default="standard")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -69,36 +59,28 @@ class Classroom(Base):
 
 
 class User(Base):
+    """A teacher account. Created by the teacher on the sign-up screen and active at once (no approval)."""
     __tablename__ = "app_user"
     id: Mapped[str] = mapped_column(UUID, primary_key=True, default=new_id)
-    role: Mapped[str] = mapped_column(String(16))  # teacher | admin
+    role: Mapped[str] = mapped_column(String(16), default="teacher")  # teacher (the only role)
     phone_hash: Mapped[str] = mapped_column(String(64), unique=True)
     pin_hash: Mapped[str] = mapped_column(String(200))
     display_name: Mapped[str] = mapped_column(String(120))
-    org_unit_id: Mapped[str | None] = mapped_column(ForeignKey("org_unit.id"), nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    # Self-registered (Create account on the login screen) and not yet approved by an admin above; cannot log in.
-    pending: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
-    # The admin the sign-up request was sent to (chosen on the Create account form).
-    approver_id: Mapped[str | None] = mapped_column(ForeignKey("app_user.id"), nullable=True)
     # Tokens issued before this moment are rejected (set when the PIN changes → logs out every device).
     credentials_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
-class Notification(Base):
-    """In-app notification for one account (e.g. a teacher's sign-up request for the admins who may approve it)."""
-    __tablename__ = "notification"
-    __table_args__ = (Index("ix_notification_recipient_read", "recipient_id", "read_at"),)
-    id: Mapped[str] = mapped_column(UUID, primary_key=True, default=new_id)
-    recipient_id: Mapped[str] = mapped_column(ForeignKey("app_user.id", ondelete="CASCADE"), index=True)
-    kind: Mapped[str] = mapped_column(String(32))  # signup_request | admin_joined | account_approved
-    title: Mapped[str] = mapped_column(String(200))
-    body: Mapped[str] = mapped_column(Text, default="")
-    subject_user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)  # who it is about
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+class AuthAttempt(Base):
+    """Failed logins / PIN changes and sign-ups, for brute-force throttling. Kept in the database (not in
+    process memory) so the limit holds across serverless instances and API replicas."""
+    __tablename__ = "auth_attempt"
+    __table_args__ = (Index("ix_auth_attempt_key_at", "key", "at"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(String(160))
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
 class ClassroomTeacher(Base):
@@ -182,6 +164,15 @@ class Blob(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class BlobData(Base):
+    """Blob bytes for BLOB_BACKEND=db (serverless hosts such as Vercel have no persistent disk)."""
+    __tablename__ = "blob_data"
+    key: Mapped[str] = mapped_column(String(300), primary_key=True)
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    mime: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class SkillState(Base):
     __tablename__ = "skill_state"
     child_id: Mapped[str] = mapped_column(ForeignKey("child.id"), primary_key=True)
@@ -234,6 +225,8 @@ class ClassDay(Base):
     day: Mapped[date] = mapped_column(Date)
     children: Mapped[list] = mapped_column(JSONType, default=list)  # [{child_id, priority, reasons}]
     slate_problems: Mapped[list] = mapped_column(JSONType, default=list)
+    # Hash of the consented children when the list was built: a changed roster rebuilds today's list.
+    roster_sig: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

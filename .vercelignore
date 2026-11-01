@@ -1,0 +1,13 @@
+data/
+eval/
+infra/
+tools/
+docs/
+**/.venv/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+services/api/tests/
+services/api/*.egg-info/
+apps/web/dist/

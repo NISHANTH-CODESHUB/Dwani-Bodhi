@@ -7,9 +7,9 @@
 2. `docker compose up -d --build`. The API runs `alembic upgrade head` on start; Caddy obtains TLS automatically.
 3. The first speech-worker start downloads the acoustic model into `/data/hf`. Watch it with
    `docker compose logs -f worker-speech`.
-4. Create the org tree, schools, classrooms and users via `/v1/admin/*` (see `/docs`) with an admin account.
-   Bootstrap the first admin with
-   `docker compose exec api python -m app.cli create-admin --phone 98xxxxxxxx`. It prints a generated 8-digit PIN once; hand it over in person. `POST /v1/admin/users` without a `pin` also returns a generated one, and every PIN must pass the policy in `security.pin_problem`.
+4. Teachers create their own accounts, schools and classes in the app (*New teacher? Create an account*);
+   nobody approves them. A forgotten PIN: `docker compose exec api python -m app.cli reset-pin --phone 98xxxxxxxx`
+   (prints a new PIN once). Every PIN must pass the policy in `security.pin_problem`.
 5. Print ID cards: `python tools/make_aruco_cards.py --from 1 --to 48`.
 
 ## Daily checks
@@ -22,7 +22,7 @@
 ## Scaling
 - Speech backlog: `docker compose up -d --scale worker-speech=N`, or move to GPU nodes (`SPEECH_DEVICE=cuda`).
 - API latency: increase `API_WORKERS` or the number of replicas behind a load balancer (the API is stateless).
-- Database: move to managed Postgres; add a read replica for the admin dashboards.
+- Database: move to managed Postgres; add a read replica for reporting.
 - Media: switch `BLOB_BACKEND=s3` (bucket in an Indian region, SSE on).
 
 ## Backups
@@ -37,3 +37,14 @@
 - Claude outage or budget hit: the system automatically falls back to template cards and teacher-read slates. No action needed.
 - Speech model failure: responses stay `pending` and are retried with backoff; fix, then restart the workers.
 - Data-deletion request: `DELETE /v1/children/{id}` from the teacher app.
+
+## Vercel deployment
+
+See README → Deployment → Option A. Operational notes:
+- Logs: Vercel → Project → *Logs* (filter `api/index`). A start-up `RuntimeError` names the missing setting
+  (`JWT_SECRET`, `PHONE_PEPPER`, a Postgres `DATABASE_URL`).
+- Migrations run on the first cold start after a deploy (Postgres advisory lock; concurrent starts wait).
+- Daily maintenance (`/v1/cron/tick`, 03:00 IST): purges expired media, recovers stale jobs, builds weekly
+  Action Cards. Needs `CRON_SECRET`. Trigger by hand: `curl -H "Authorization: Bearer $CRON_SECRET" https://<app>/v1/cron/tick`.
+- Queued work is visible at `/health` (`queued`, `failed_jobs`).
+- Fresh start: run `python -m app.cli reset-data --yes` locally with `DATABASE_URL` set to the Neon URL.

@@ -1,4 +1,4 @@
-"""Read models for the teacher app and admin dashboards (child-level data never includes names)."""
+"""Read models for the teacher app (child-level data never includes names)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..learner.misconceptions import CONFIRMED, SUSPECTED
-from ..models import Child, Classroom, LearnerAux, MisconceptionState, Response, School, SkillState
-from ..security import org_descendants
+from ..models import Child, LearnerAux, MisconceptionState, Response, SkillState
 from .cards import _examples
 from .catalog import certainty_hi, describe
 from .common import pack
@@ -71,10 +70,3 @@ def class_overview(db: Session, classroom_id: str) -> dict:
                      "confirmed_confusions": n_conf,
                      "last_assessed": aux.last_assessed.isoformat() if aux and aux.last_assessed else None})
     return {"n_children": len(kids), "literacy_levels": dict(lit), "numeracy_levels": dict(num), "children": rows}
-
-
-def classrooms_in_scope(db: Session, org_unit_id: str | None) -> list[str]:
-    q = select(Classroom.id).join(School, School.id == Classroom.school_id)
-    if org_unit_id:
-        q = q.where(School.org_unit_id.in_(org_descendants(db, org_unit_id)))
-    return list(db.scalars(q).all())

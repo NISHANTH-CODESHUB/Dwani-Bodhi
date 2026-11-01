@@ -1,6 +1,7 @@
 # Dhwani-Bodhi — User Guide
 
-This guide covers starting the system and using it day to day as a **teacher** or an **admin**.
+This guide covers starting the system and using it day to day as a **teacher**. There are only two kinds
+of users: teachers (who sign up themselves) and the children they check. There is no admin.
 The app's screens are in Hindi. Hindi labels are shown in quotes with an English meaning next to them.
 The same steps are also in the app under **मेनू → उपयोग गाइड** (Menu → User guide).
 
@@ -31,40 +32,22 @@ npm run dev                       # open http://localhost:5173
 To try voice items without a microphone, start the web app with `npm run dev -- --mode demo`.
 A text box will appear so you can type what the child "said".
 
-**Demo logins.** `python -m app.demo` creates two accounts: a teacher (the full teacher app) and an admin
-(the admin dashboard). Each gets a **random phone number and a random 6-digit PIN**.
-They are printed once in the terminal and saved to `data/demo-credentials.txt`, which git ignores and
-which you should not share. The database keeps only hashes, so lost PINs can't be recovered; issue new
-ones with `python -m app.demo --reset-credentials`.
+**Create your account.** On the login screen tap **New teacher? Create an account** and fill in your name,
+mobile number, a PIN, your school, your class name and the grades taught in it (optionally, the children's
+home-language area, so regional pronunciations are not counted as reading mistakes). The account is
+**ready at once — nobody has to approve it** — and you go straight to your class. Add more classes later
+under **☰ → Change class → Add a class**; tap the ✎ next to a class to rename it or change its grades.
 
-**Accounts and the hierarchy.** There are two ways to get an account:
+**Who sees what.** Each teacher sees only their own classes. Children's names stay on the teacher's phone;
+the server knows a child only by an ID and a register number.
 
-- **Create an account yourself.** On the login screen tap **New here? Create an account** and choose:
-  - **Teacher**: pick your class, then under **Send request to** the admin who should approve you (only admins
-    above your class are listed, nearest first). Every admin who may approve gets a **notification** (the bell
-    at the top right, and *Waiting for your approval* on the admin dashboard) and can approve or reject it in
-    one tap. Until then, logging in shows "waiting for approval". When you are approved, the bell tells you.
-  - **Admin**: pick your unit (state, district, block or cluster). The account is **ready at once**, no
-    approval, and you are signed straight in as the admin of that unit. The admins above that unit are
-    notified. Nobody can sign up as the top-level admin. (Operators can require approval for admin
-    sign-ups again with `ADMIN_SELF_SIGNUP=false`.)
-- **An admin creates it for you** (see below), and gives you a PIN in person.
+**Forgotten PIN.** There is no admin to reset it, so whoever runs the server resets it:
+`python -m app.cli reset-pin --phone 98xxxxxxxx` (prints a new PIN once and signs the account out everywhere).
 
-- **First run.** On a brand-new installation (no accounts yet) the login screen shows *Set up Dhwani-Bodhi*.
-  The person who fills it in becomes the **top-level admin** and manages every unit and account. The form
-  disappears for good once any account exists. On a server you can instead run
-  `python -m app.cli create-admin --phone 98xxxxxxxx --name "State Admin"`.
-- **Menu → Accounts & hierarchy** (admins only). Under *Hierarchy*, build the structure state → district →
-  block → cluster → school → class. Under *Accounts*, add teachers (link their classes) and admins for
-  lower units. Leave the PIN empty and the app generates a strong one, which is shown
-  **once**. Write it down and hand it over in person.
-- **Who sees what.** The top-level admin manages everything. An admin of a district (or block…) sees and
-  manages only that unit and what is below it, and can't create or change admins at their own level or
-  above. Admins see the students of the schools in their unit (by register number, never names).
-  Teachers see only their own classes.
-- **Forgotten PIN.** An admin above the person taps **Reset PIN** (this signs them out everywhere). **Deactivate**
-  blocks an account immediately without deleting anything. The top-level admin has nobody above them, so
-  their PIN is reset on the server with `python -m app.cli reset-pin --phone 98xxxxxxxx`.
+**Demo data (developers).** `python -m app.demo` seeds a demo class with a teacher account whose random phone
+number and PIN are printed once and saved to the git-ignored `data/demo-credentials.txt`
+(`--reset-credentials` issues new ones). `python -m app.cli reset-data --yes` deletes every account, class,
+child and answer for a fresh start.
 
 **PIN rules (all accounts).** A PIN must have 6–12 digits and must be hard to guess: no repeats like
 `111111` or `121212`, no sequences like `123456`, no common PINs, and no digits taken from your mobile
@@ -96,7 +79,7 @@ These are on every screen:
 ## 3. Teacher workflow
 
 ### Step 1 — Sign in and choose a class
-Enter your mobile number and PIN, then tap **लॉग-इन करें** (Log in).
+New teachers create an account first (see section 1). After that, enter your mobile number and PIN and tap **Log in**.
 If you teach more than one class, pick one. You can change it later from the class switcher.
 
 ### Step 2 — Add children and record consent
@@ -172,33 +155,18 @@ Tap any child's name to open their profile. It shows:
   the profile, which now ends with the full **activity timeline**: every kiosk session and slate check, with
   each answer and its result.
 
-## 5. Admin workflow
-
-Admins land on the **Admin dashboard**:
-- totals (schools, classes, teachers, students, sessions in the last 7 / 30 days),
-- **Waiting for your approval**: teacher sign-up requests, with Approve / Reject right there,
-- sessions per day, and where students are on the reading and maths ladders,
-- **Teacher activity** (classes, students, sessions this week) and the **latest sessions**.
-
-**Students** lists every student in your part of the hierarchy. Filter by school, class, grade or consent, or
-search by register number. Open a student to see the profile, confirmed confusions and activity timeline, to
-correct the grade or parental consent (the teacher's phone picks it up on its next sync), or to erase all
-of the student's data. **Teachers** shows each teacher's classes, students, sessions and last login.
-Student names never reach the server, so admins identify students by register number.
-
----
-
-## 6. Working offline
+## 5. Working offline
 - Everything works without internet: the roster, daily checks, slate photos and the last downloaded card.
 - Recordings and photos wait in the phone's storage and upload automatically when there is a network.
 - If you log out while items are still waiting, the app warns you. Waiting items are kept and sent at the next login.
 
-## 7. Privacy in one paragraph
-Children's names stay on the teacher's phone. Audio is deleted right after scoring.
-Claude (the AI) only sees cropped slates and de-identified data. Admins see students by register number only.
+## 6. Privacy in one paragraph
+Children's names stay on the teacher's phone. Audio is deleted right after scoring (or, when the teacher
+reviews recordings, after the 7-day review window).
+Claude (the AI) only sees cropped slates and de-identified data. Only the class teacher can see a class.
 Consent is enforced at sync: the server rejects data for children without consent.
 
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Problem | Fix |
 |---|---|
@@ -206,4 +174,6 @@ Consent is enforced at sync: the server rejects data for children without consen
 | Home says *पहली बार इस्तेमाल के लिए इंटरनेट से सिंक करें* (sync over the internet before first use) | Connect to the internet and tap the sync pill. |
 | ▶ is missing next to a child | Consent has not been recorded. Open the child and choose *सहमति मिली*. |
 | "माइक की अनुमति नहीं मिली" (microphone permission denied) | Allow microphone access for the site in Chrome settings. |
-| No Action Card yet | Assess a few children and sync. The worker builds the card. |
+| No Action Card yet | Assess a few children and sync. The card is built from their results. |
+| "Cannot reach the server" at login | The API is not running (locally: start Terminal 1) or the phone is offline. |
+| A child added today is missing from *Who to check today* | Sync once (tap the sync pill): the list is rebuilt when the class roster changes. |

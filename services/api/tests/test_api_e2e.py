@@ -144,35 +144,19 @@ def test_teacher_sees_class_and_student_activity(world):
     assert one["domains"]["literacy"]["correct"] + one["domains"]["literacy"]["incorrect"] > 0
 
 
-def test_admin_dashboard_shows_teachers_and_all_students(world):
-    c = world["client"]
-    login_as(world, "teacher")  # records the teacher's last login
-    A = login_as(world, "admin")
-    d = c.get("/v1/admin/dashboard", headers=A).json()
-    assert d["totals"]["students"] >= 12 and d["totals"]["teachers"] >= 1 and len(d["daily"]) == 14
-    t = next(t for t in d["teachers"] if t["display_name"] == "Sunita Didi")
-    assert t["students"] >= 12 and t["classes"] and t["last_login_at"]
-    assert d["recent"] and d["recent"][0]["register_no"]
-    page = c.get("/v1/admin/students", headers=A, params={"limit": 5}).json()
-    assert page["total"] >= 12 and len(page["students"]) == 5 and page["classrooms"]
-    reg = page["students"][0]["register_no"]
-    assert c.get("/v1/admin/students", headers=A, params={"q": reg}).json()["students"][0]["register_no"] == reg
-    assert c.get(f"/v1/admin/students/by-register/{reg}", headers=A).json()["register_no"] == reg
-    # admins can open a student's profile and activity (no names: those stay on the teacher's phone)
-    kid = world["children"]["Pooja"]
-    assert c.get(f"/v1/children/{kid}/profile", headers=A).status_code == 200
-    blob = json.dumps(c.get(f"/v1/children/{kid}/activity", headers=A).json(), ensure_ascii=False)
-    assert "Pooja" not in blob
-    # teachers cannot use admin dashboards
-    assert c.get("/v1/admin/dashboard", headers=world["H"]).status_code == 403
-
-
 def test_teacher_cannot_access_other_classroom(world):
     c = world["client"]
-    AH = login_as(world, "admin")
-    school = c.post("/v1/admin/schools", headers=AH, json={"name": "दूसरा स्कूल"}).json()["id"]
-    room = c.post("/v1/admin/classrooms", headers=AH, json={"school_id": school, "name": "x", "grades": [1]}).json()["id"]
+    other = c.post("/v1/auth/signup", json={"display_name": "Other", "phone": "9123400001", "pin": "583920",
+                                             "school_name": "दूसरा स्कूल", "class_name": "x", "grades": [1]})
+    assert other.status_code == 200, other.text
+    room = other.json()["classrooms"][0]["id"]
     assert c.get(f"/v1/classrooms/{room}/children", headers=world["H"]).status_code == 403
+    # ... and the other teacher cannot see the demo class or its children
+    OH = {"Authorization": f"Bearer {other.json()['token']}"}
+    assert c.get(f"/v1/classrooms/{world['classroom_id']}/children", headers=OH).status_code == 403
+    kid = world["children"]["Pooja"]
+    assert c.get(f"/v1/children/{kid}/profile", headers=OH).status_code == 403
+    assert c.get(f"/v1/children/{kid}/activity", headers=OH).status_code == 403
 
 
 def test_right_to_erasure(world):
@@ -315,32 +299,14 @@ def test_malformed_tokens_are_401_not_500(world):
         assert c.get("/v1/me", headers={"Authorization": f"Bearer {tok}"}).status_code == 401
 
 
-def test_org_admin_cannot_review_global_bug_library(world):
-    from app.db import SessionLocal
-    from app.models import BugProposal, OrgUnit, User
-    from app.security import hash_phone, hash_pin
-    with SessionLocal() as db:
-        unit = db.query(OrgUnit).first()
-        db.add(User(role="admin", phone_hash=hash_phone("9555512345"), pin_hash=hash_pin("468135"),
-                    display_name="District admin", org_unit_id=unit.id))
-        bp = BugProposal(spec={"op": "noop"}, description="test", explains=[], status="proposed")
-        db.add(bp)
-        db.commit()
-        pid = bp.id
-    tok = world["client"].post("/v1/auth/login", json={"phone": "9555512345", "pin": "468135"}).json()["token"]
-    r = world["client"].post(f"/v1/admin/bug-proposals/{pid}/review", json={"decision": "approved"},
-                             headers={"Authorization": f"Bearer {tok}"})
-    assert r.status_code == 403
-
-
 def test_demo_credentials_are_random_and_strong(world):
     from app.security import pin_problem
     creds = world["credentials"]
-    assert set(creds) == {"teacher", "admin"}
+    assert set(creds) == {"teacher"}
     for c in creds.values():
         assert pin_problem(c["pin"], c["phone"]) is None and c["pin"] != "1234"
         assert not c["phone"].startswith("900000000")
-    assert len({c["phone"] for c in creds.values()}) == 2
+    assert login_as(world, "teacher")
 
 
 def test_weak_pin_forces_change_and_change_ends_old_sessions(world):
@@ -368,18 +334,6 @@ def test_weak_pin_forces_change_and_change_ends_old_sessions(world):
     assert c.post("/v1/auth/login", json={"phone": phone, "pin": "1234"}).status_code == 401
     again = c.post("/v1/auth/login", json={"phone": phone, "pin": "580317"}).json()
     assert again["pin_change_required"] is False
-
-
-def test_admin_user_creation_enforces_pin_policy(world):
-    c = world["client"]
-    AH = login_as(world, "admin")
-    weak = c.post("/v1/admin/users", headers=AH,
-                  json={"role": "teacher", "phone": "8123456789", "pin": "111111", "display_name": "t"})
-    assert weak.status_code == 422
-    made = c.post("/v1/admin/users", headers=AH, json={"role": "teacher", "phone": "8123456789", "display_name": "t"})
-    pin = made.json()["pin"]  # generated, returned once
-    r = c.post("/v1/auth/login", json={"phone": "8123456789", "pin": pin}).json()
-    assert r["pin_change_required"] is False and r["user"]["role"] == "teacher"
 
 
 def test_failed_media_job_still_deletes_child_audio(world):
@@ -417,6 +371,7 @@ def test_erasure_removes_slate_crops_sessions_and_jobs(world):
         assert not db.query(AssessmentSession).filter(AssessmentSession.child_id == victim).count()
         assert not db.query(Response).filter(Response.child_id == victim).count()
         assert not [j for j in db.query(Job).all() if (j.payload or {}).get("child_id") == victim]
-    for k in keys:
-        with pytest.raises(FileNotFoundError):  # tests use the local blob store
-            get_store().get(k)
+    with SessionLocal() as db:
+        for k in keys:
+            with pytest.raises(FileNotFoundError):  # tests use the local blob store
+                get_store(db).get(k)

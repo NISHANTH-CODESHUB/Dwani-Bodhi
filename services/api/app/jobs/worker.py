@@ -44,10 +44,10 @@ HANDLERS = {
 }
 
 
-def run_once(queues: list[str], worker_id: str) -> bool:
+def run_once(queues: list[str], worker_id: str, horizon_s: float = 0.0) -> bool:
     db = SessionLocal()
     try:
-        job = claim(db, queues, worker_id)
+        job = claim(db, queues, worker_id, horizon_s)
         if job is None:
             return False
         handler = HANDLERS.get(job.kind)
@@ -74,6 +74,28 @@ def drain(queues: list[str] | None = None, max_jobs: int = 10_000) -> int:
     while n < max_jobs and run_once(queues, "drain"):
         n += 1
     return n
+
+
+def drain_for(budget_s: float, queues: list[str], horizon_s: float = 3.0) -> int:
+    """Serverless mode: run due jobs until the queues are empty or `budget_s` has passed (checked between
+    jobs). Whatever is left is picked up by the next request, the app's pump call, or the daily cron."""
+    t0, n = time.monotonic(), 0
+    while time.monotonic() - t0 < budget_s and run_once(queues, f"inline:{os.getpid()}", horizon_s):
+        n += 1
+    return n
+
+
+def pending_jobs(queues: list[str] | None = None) -> int:
+    from sqlalchemy import func
+
+    db = SessionLocal()
+    try:
+        q = select(func.count()).select_from(Job).where(Job.status == "queued")
+        if queues:
+            q = q.where(Job.queue.in_(queues))
+        return int(db.scalar(q) or 0)
+    finally:
+        db.close()
 
 
 def schedule_tick() -> None:

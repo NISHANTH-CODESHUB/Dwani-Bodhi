@@ -74,6 +74,17 @@ export interface KV {
   updated_at: string;
 }
 
+/**
+ * v2 = teacher-only accounts with a fresh server database. The pre-v2 store held rosters and recordings
+ * for classes that no longer exist on the server, so it is deleted once (the "fresh start").
+ */
+const DB_NAME = 'dhwani-bodhi-v2';
+const LEGACY_DB_NAMES = ['dhwani-bodhi'];
+
+if (typeof indexedDB !== 'undefined') {
+  for (const name of LEGACY_DB_NAMES) void Dexie.delete(name).catch(() => undefined);
+}
+
 export class DhwaniDB extends Dexie {
   children!: EntityTable<LocalChild, 'id'>;
   sessions!: EntityTable<LocalSession, 'id'>;
@@ -84,7 +95,7 @@ export class DhwaniDB extends Dexie {
   kv!: EntityTable<KV, 'key'>;
 
   constructor() {
-    super('dhwani-bodhi');
+    super(DB_NAME);
     this.version(1).stores({
       children: 'id, classroom_id, aruco_slot, dirty, deleted',
       sessions: 'id, child_id, classroom_id, started_at, [done+synced]',
@@ -109,6 +120,7 @@ export const KV_KEYS = {
   unsureCount: (cid: string) => `unsure_count:${cid}`,
   profile: (childId: string) => `profile:${childId}`,
   plan: (childId: string) => `plan:${childId}`,
+  explain: (childId: string) => `explain:${childId}`,
   lastSync: 'last_sync',
   classActivity: (cid: string) => `class_activity:${cid}`,
 } as const;

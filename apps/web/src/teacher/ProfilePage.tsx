@@ -8,7 +8,7 @@ import { formatTime, hi } from '../i18n/hi';
 import { api } from '../lib/api';
 import { skillBand } from '../lib/childUi';
 import { useContent } from '../lib/content';
-import { KV_KEYS, childLabel, db, kvGetWithTime, kvSet } from '../lib/db';
+import { KV_KEYS, childLabel, db, kvGet, kvGetWithTime, kvSet } from '../lib/db';
 import type { ChildProfile, Explanation, ProfileSkill, StudentActivity } from '../lib/types';
 import { WcpmChart } from './WcpmChart';
 
@@ -73,11 +73,27 @@ export default function ProfilePage() {
   const p = cached?.value;
   const name = childLabel(child, p?.aruco_slot);
 
+  // A saved explanation stays valid until the child is assessed again: show it at once instead of
+  // making the teacher wait ~10 s (and paying for another model call) on every visit.
+  const savedExplain = useLive(
+    () => kvGet<{ for: string | null; value: Explanation }>(KV_KEYS.explain(id)),
+    [id],
+    undefined,
+  );
+  useEffect(() => {
+    setExplain(null);
+    setExplainErr(null);
+  }, [id]);
+  const shownExplain =
+    explain ?? (savedExplain && p && savedExplain.for === (p.last_assessed ?? null) ? savedExplain.value : null);
+
   const doExplain = async () => {
     setExplainBusy(true);
     setExplainErr(null);
     try {
-      setExplain(await api.explain(id));
+      const out = await api.explain(id);
+      setExplain(out);
+      await kvSet(KV_KEYS.explain(id), { for: p?.last_assessed ?? null, value: out });
     } catch (e) {
       setExplainErr(e);
     } finally {
@@ -217,19 +233,25 @@ export default function ProfilePage() {
           <section className="panel explain-panel">
             <button className="btn btn-primary btn-block" onClick={doExplain} disabled={explainBusy}>
               <Icon name="sparkle" size={18} />
-              {explainBusy ? hi.explaining : hi.explain}
+              {explainBusy ? hi.explaining : shownExplain ? hi.explainAgain : hi.explain}
             </button>
+            {explainBusy && (
+              <div className="explain-wait" role="status">
+                <span className="spinner-dot" aria-hidden />
+                {hi.explainWait}
+              </div>
+            )}
             <ErrorBox error={explainErr} />
-            {explain && (
+            {shownExplain && !explainBusy && (
               <div className="explain">
-                <p className="explain-summary">{fillChild(explain.summary_hi, name)}</p>
+                <p className="explain-summary">{fillChild(shownExplain.summary_hi, name)}</p>
                 <ul>
-                  {explain.bullets_hi.map((b, i) => (
+                  {shownExplain.bullets_hi.map((b, i) => (
                     <li key={i}>{fillChild(b, name)}</li>
                   ))}
                 </ul>
                 <p className="explain-next">
-                  <strong>{hi.nextStep}:</strong> {fillChild(explain.next_step_hi, name)}
+                  <strong>{hi.nextStep}:</strong> {fillChild(shownExplain.next_step_hi, name)}
                 </p>
               </div>
             )}

@@ -1,5 +1,5 @@
-"""Classroom endpoints (teacher, and admins within their hierarchy): bootstrap, roster, today, cards,
-profiles, confirm queue."""
+"""Classroom endpoints (the class teacher only): classes, bootstrap, roster, today, cards, profiles,
+confirm queue."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from ..models import (
     AssessmentSession,
     Blob,
     Child,
+    Classroom,
     Job,
     LearnerAux,
     LLMCall,
@@ -33,8 +34,8 @@ from ..models import (
     TeacherOverride,
 )
 from ..security import Principal, current_principal, ensure_child, ensure_classroom
+from ..services import accounts, planning, reports
 from ..services import cards as card_svc
-from ..services import planning, reports
 from ..services.common import as_utc, pack
 from ..services.slates import confirm_slate_answer
 from ..services.students import assign_register_no
@@ -60,6 +61,44 @@ def bootstrap(_: Principal = Depends(current_principal)) -> dict:
         "activities": {a.id: {"title_hi": a.title_hi, "materials": a.materials, "minutes": a.minutes}
                        for a in cp.activities.values()},
     }
+
+
+# ---------------------------------------------------------------------------------- classes
+@router.post("/classrooms")
+def create_classroom(body: accounts.ClassroomFields, p: Principal = Depends(current_principal),
+                     db: Session = Depends(get_db)) -> dict:
+    """A teacher adds another class (same or another school). Returns the updated class list."""
+    room = accounts.create_classroom(db, p.user, body)
+    db.commit()
+    return {"id": room.id, "classrooms": accounts.classrooms_for(db, p.user)}
+
+
+class ClassroomPatch(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=120)
+    grades: list[int] | None = Field(None, min_length=1, max_length=5)
+    region_profile: str | None = Field(None, max_length=64)
+    daily_kiosk_budget_min: float | None = Field(None, ge=3, le=60)
+
+
+@router.patch("/classrooms/{cid}")
+def update_classroom(cid: str, body: ClassroomPatch, p: Principal = Depends(current_principal),
+                     db: Session = Depends(get_db)) -> dict:
+    room: Classroom = ensure_classroom(db, p, cid)
+    if body.name is not None:
+        name = " ".join(body.name.split())
+        if not name:
+            raise HTTPException(422, "class name must not be empty")
+        room.name = name
+    if body.grades is not None:
+        if any(g < 1 or g > 5 for g in body.grades):
+            raise HTTPException(422, "grades must be between 1 and 5")
+        room.grades = sorted(set(body.grades))
+    if body.region_profile is not None:
+        room.region_profile = accounts.check_region(body.region_profile)
+    if body.daily_kiosk_budget_min is not None:
+        room.daily_kiosk_budget_min = body.daily_kiosk_budget_min
+    db.commit()
+    return {"id": room.id, "classrooms": accounts.classrooms_for(db, p.user)}
 
 
 # ----------------------------------------------------------------------------------- roster
@@ -123,12 +162,12 @@ def upsert_child(cid: str, body: ChildIn, p: Principal = Depends(current_princip
 @router.delete("/children/{child_id}")
 def delete_child(child_id: str, p: Principal = Depends(current_principal), db: Session = Depends(get_db)) -> dict:
     """Right to erasure: removes all learning data and stored media for this child."""
-    c = ensure_child(db, p, child_id, teacher_only=True)
+    c = ensure_child(db, p, child_id)
     responses = db.scalars(select(Response).where(Response.child_id == child_id)).all()
     resp_ids = [r.id for r in responses]
     crop_keys = {(r.payload or {}).get("crop_key") for r in responses if r.item_type == "slate"} - {None}
     for b in db.scalars(select(Blob).where(or_(Blob.response_id.in_(resp_ids), Blob.key.in_(crop_keys)))):
-        get_store().delete(b.key)
+        get_store(db).delete(b.key)
         db.delete(b)
     db.execute(delete(TeacherOverride).where(TeacherOverride.response_id.in_(resp_ids)))
     for model in (Response, SkillState, MisconceptionState, Plan, Recheck, LearnerAux, AssessmentSession):
@@ -156,7 +195,7 @@ def today(cid: str, force: bool = False, p: Principal = Depends(current_principa
 
 @router.get("/children/{child_id}/plan")
 def child_plan(child_id: str, p: Principal = Depends(current_principal), db: Session = Depends(get_db)) -> dict:
-    ensure_child(db, p, child_id, teacher_only=True)
+    ensure_child(db, p, child_id)
     plan = planning.latest_plan(db, child_id)
     if plan is None:
         from ..services.learner import update_child
@@ -190,13 +229,13 @@ def class_efficacy(cid: str, p: Principal = Depends(current_principal), db: Sess
 # -------------------------------------------------------------------------------- profiles
 @router.get("/children/{child_id}/profile")
 def profile(child_id: str, p: Principal = Depends(current_principal), db: Session = Depends(get_db)) -> dict:
-    c = ensure_child(db, p, child_id, teacher_only=True)
+    c = ensure_child(db, p, child_id)
     return reports.child_evidence(db, c)
 
 
 @router.get("/children/{child_id}/explain")
 def explain(child_id: str, p: Principal = Depends(current_principal), db: Session = Depends(get_db)) -> dict:
-    c = ensure_child(db, p, child_id, teacher_only=True)
+    c = ensure_child(db, p, child_id)
     ev = reports.child_evidence(db, c)
     slim = {k: ev[k] for k in ("grade", "levels", "confusions", "checking", "wcpm_history")}
     slim["skills"] = [s for s in ev["skills"] if s["p"] is not None]
@@ -255,7 +294,7 @@ def media(rid: str, p: Principal = Depends(current_principal), db: Session = Dep
     r = db.get(Response, rid)
     if r is None:
         raise HTTPException(404, "not found")
-    ensure_child(db, p, r.child_id, teacher_only=True)
+    ensure_child(db, p, r.child_id)
     if r.item_type == "slate":
         key = (r.payload or {}).get("crop_key")
         if not key:
@@ -268,7 +307,7 @@ def media(rid: str, p: Principal = Depends(current_principal), db: Session = Dep
         if b is None:
             raise HTTPException(410, "audio already deleted (privacy retention)")
     try:
-        data = get_store().get(b.key)
+        data = get_store(db).get(b.key)
     except FileNotFoundError as e:
         raise HTTPException(410, "media no longer stored") from e
     return RawResponse(data, media_type=b.mime or "image/jpeg", headers={"Cache-Control": "private, no-store"})
@@ -285,7 +324,7 @@ def confirm(rid: str, body: ConfirmIn, p: Principal = Depends(current_principal)
     r = db.get(Response, rid)
     if r is None:
         raise HTTPException(404, "not found")
-    ensure_child(db, p, r.child_id, teacher_only=True)
+    ensure_child(db, p, r.child_id)
     # Only queued items can be confirmed. Re-confirming an already-applied response would add its evidence
     # to the learner model a second time (incremental updates cannot subtract the old verdict).
     if r.status != "unsure":

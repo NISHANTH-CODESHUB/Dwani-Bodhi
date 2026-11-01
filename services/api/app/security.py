@@ -13,12 +13,11 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .config import get_settings
 from .db import get_db
-from .models import Child, Classroom, ClassroomTeacher, OrgUnit, School, User
+from .models import Child, Classroom, ClassroomTeacher, User
 
 _bearer = HTTPBearer(auto_error=False)
 PBKDF2_ROUNDS = 200_000
@@ -85,7 +84,7 @@ def pin_problem(pin: str, phone: str | None = None) -> str | None:
 
 
 def generate_pin(length: int = PIN_MIN) -> str:
-    """A random PIN that passes `pin_problem` (for demo seeding and admin-issued first PINs)."""
+    """A random PIN that passes `pin_problem` (demo seeding and the operator's reset-pin command)."""
     while True:
         pin = "".join(secrets.choice("0123456789") for _ in range(length))
         if pin_problem(pin) is None:
@@ -159,102 +158,10 @@ def pin_change_principal(
     return _principal(creds, db, allow_scope=PIN_CHANGE_SCOPE)
 
 
-def require_role(*roles: str):
-    def dep(p: Principal = Depends(current_principal)) -> Principal:
-        if p.role not in roles:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "forbidden for role")
-        return p
-    return dep
-
-
-def org_descendants(db: Session, root_id: str) -> set[str]:
-    out, frontier = {root_id}, [root_id]
-    while frontier:
-        rows = db.scalars(select(OrgUnit.id).where(OrgUnit.parent_id.in_(frontier))).all()
-        frontier = [r for r in rows if r not in out]
-        out.update(frontier)
-    return out
-
-
-# ------------------------------------------------------------------------------ hierarchy
-# Who manages whom: a global admin (org_unit_id=None) is the top-level account and manages everything.
-# An org-scoped admin manages only its own org subtree, and only accounts strictly below its own unit.
-ORG_KINDS = ("state", "district", "block", "cluster")
-
-
-def admin_scope(db: Session, p: Principal) -> set[str] | None:
-    """Org unit ids an admin may manage; None = everything (global admin)."""
-    if p.role != "admin":
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "forbidden for role")
-    return None if p.user.org_unit_id is None else org_descendants(db, p.user.org_unit_id)
-
-
-def in_scope(scope: set[str] | None, org_unit_id: str | None) -> bool:
-    return scope is None or (org_unit_id is not None and org_unit_id in scope)
-
-
-def user_org_units(db: Session, user: User) -> set[str | None]:
-    """Org units a user sits in: their own unit, plus (teachers) the units of the schools they teach in."""
-    units: set[str | None] = {user.org_unit_id} if user.org_unit_id else set()
-    if user.role == "teacher":
-        rows = db.execute(
-            select(School.org_unit_id)
-            .join(Classroom, Classroom.school_id == School.id)
-            .join(ClassroomTeacher, ClassroomTeacher.classroom_id == Classroom.id)
-            .where(ClassroomTeacher.user_id == user.id)
-        ).scalars().all()
-        units.update(rows)
-    return units
-
-
-def manages(db: Session, manager: User, role: str, units: set[str | None]) -> bool:
-    """Is `manager` above an account of `role` sitting in `units`? (empty units = a top-level account)"""
-    if manager.role != "admin" or not manager.active or manager.pending:
-        return False
-    if manager.org_unit_id is None:
-        return True
-    if not units or None in units:
-        return False
-    if role == "admin" and manager.org_unit_id in units:
-        return False  # a peer admin of the same unit
-    scope = org_descendants(db, manager.org_unit_id)
-    return all(u in scope for u in units)
-
-
-def can_manage_user(db: Session, p: Principal, target: User) -> bool:
-    """Reset PIN / deactivate / reassign / approve: only accounts below you in the hierarchy (never yourself)."""
-    if target.id == p.user.id:
-        return False
-    return manages(db, p.user, target.role, user_org_units(db, target))
-
-
-def approvers_for(db: Session, role: str, units: set[str | None]) -> list[User]:
-    """Admins allowed to approve a sign-up of `role` in `units`, nearest (deepest unit) first, top level last."""
-    depth: dict[str | None, int] = {None: -1}
-
-    def unit_depth(uid: str | None) -> int:
-        if uid not in depth:
-            parent = db.get(OrgUnit, uid)
-            depth[uid] = 0 if parent is None or parent.parent_id is None else unit_depth(parent.parent_id) + 1
-        return depth[uid]
-
-    admins = db.scalars(select(User).where(User.role == "admin", User.active.is_(True))).all()
-    ok = [a for a in admins if manages(db, a, role, units)]
-    return sorted(ok, key=lambda a: (-unit_depth(a.org_unit_id), a.display_name))
-
-
 def can_access_classroom(db: Session, p: Principal, classroom_id: str) -> bool:
     """Classroom endpoints expose child-level data (never names: those stay on the teacher's phone).
-    Allowed: the class teacher, the top-level admin, and an org admin whose subtree contains the school."""
-    if p.role == "teacher":
-        return db.get(ClassroomTeacher, (classroom_id, p.user.id)) is not None
-    if p.role != "admin":
-        return False
-    if p.user.org_unit_id is None:
-        return True
-    room = db.get(Classroom, classroom_id)
-    unit = room.school.org_unit_id if room is not None else None
-    return unit is not None and unit in org_descendants(db, p.user.org_unit_id)
+    Only the teachers of that class may see it."""
+    return db.get(ClassroomTeacher, (classroom_id, p.user.id)) is not None
 
 
 def ensure_classroom(db: Session, p: Principal, classroom_id: str) -> Classroom:
@@ -266,11 +173,9 @@ def ensure_classroom(db: Session, p: Principal, classroom_id: str) -> Classroom:
     return room
 
 
-def ensure_child(db: Session, p: Principal, child_id: str, teacher_only: bool = False) -> Child:
+def ensure_child(db: Session, p: Principal, child_id: str) -> Child:
     child = db.get(Child, child_id)
     if child is None or child.deleted_at is not None:
         raise HTTPException(404, "child not found")
-    if teacher_only and p.role not in ("teacher", "admin"):
-        raise HTTPException(403, "child-level data is visible to the class teacher and admins only")
-    ensure_classroom(db, p, child.classroom_id)  # admins: only inside their part of the hierarchy
+    ensure_classroom(db, p, child.classroom_id)
     return child

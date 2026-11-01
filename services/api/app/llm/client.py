@@ -54,7 +54,10 @@ def _sdk():
         import anthropic
 
         s = get_settings()
-        _client = anthropic.Anthropic(api_key=s.anthropic_api_key) if s.anthropic_api_key else anthropic.Anthropic()
+        # A bounded timeout: a slow call must fall back (template card, teacher-read slate) well before a
+        # serverless function's time limit, not hang the request.
+        opts = {"timeout": s.llm_timeout_s, "max_retries": 1}
+        _client = anthropic.Anthropic(api_key=s.anthropic_api_key, **opts) if s.anthropic_api_key             else anthropic.Anthropic(**opts)
     return _client
 
 

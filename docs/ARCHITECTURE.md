@@ -3,7 +3,7 @@
 ```
 Phone (PWA, offline-first)                         Server (India region)                         Claude API
 ┌──────────────────────────┐   HTTPS batch sync   ┌──────────────────────────────────┐  crops + de-identified JSON
-│ Kiosk · Teacher · Admin  │ ───────────────────► │ API (FastAPI, stateless, N reps) │ ─────────────────────────►
+│ Kiosk · Teacher app      │ ───────────────────► │ API (FastAPI, stateless, N reps) │ ─────────────────────────►
 │ Dexie: roster WITH names │  UUIDs only, idempot.│  /v1/sync → blobs + job queue     │
 │ plans, items, queue      │ ◄─────────────────── │ Workers (scale per queue):        │
 │ VAD, discontinue rules   │  plans, cards, today │  speech  ECCL (Wav2Vec2-CTC)      │
@@ -40,7 +40,7 @@ Phone (PWA, offline-first)                         Server (India region)        
 |---|---|
 | Pilot (≤50 schools) | One VM, `docker compose` |
 | District (≈2k schools) | Managed Postgres, S3 bucket (Indian region), 2–4 API replicas, 4–8 CPU speech workers |
-| State (≈50k schools) | Kubernetes; speech workers on GPU nodes (one model load serves many jobs); Postgres read replicas for admin dashboards; partition `response` by month |
+| State (≈50k schools) | Kubernetes; speech workers on GPU nodes (one model load serves many jobs); Postgres read replicas for reporting; partition `response` by month |
 
 Rough arithmetic:
 - 1M children × 2.5 audio-minutes/week ≈ 2.5M audio-minutes/week.

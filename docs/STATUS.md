@@ -8,13 +8,20 @@
 | Item engineering + adaptive planning (N3) | ✅ | Generated items have zero bug collisions; planner respects budget and reuse window |
 | Learner model, levels, scheduler (N4) | ✅ | BKT soft evidence, asymmetric propagation, Beta misconceptions, TaRL ladders |
 | Action Cards + re-checks + efficacy (N5) | ✅ | Claude Opus path with validator; deterministic template fallback; re-checks registered and closed |
-| API (auth, roster, sync, today, card, profile, explain, confirm queue, CRCC, admin) | ✅ | 18 end-to-end tests drive the real API through the demo seeder |
+| API (teacher sign-up, classes, roster, sync, today, card, profile, explain, confirm queue, jobs/cron) | ✅ | 18 end-to-end tests drive the real API through the demo seeder |
 | Privacy (consent gate, names on-device, audio deletion, erasure, k-anonymity, prod secret checks) | ✅ | e2e tests: consent rejection, `{{child}}` placeholder, CRCC 403 on child data, deletion |
 | PWA (kiosk, teacher, slate, card, profile, confirm queue, CRCC, help, offline sync) | ✅ | UI v3 (sidebar/drawer/tab-bar shell) checked by screenshot at 390 px and 1440 px; 47 Vitest tests; production build 447 KB precache; driven in headless Chrome at 360px |
 | Deploy (Compose, Caddy, Alembic, CI, CLI, runbook) | ✅ | Migration applies cleanly; CI workflow for API and web |
 | Eval harnesses + calibration | ✅ | Run in self-check mode (synthetic; not accuracy claims) |
 
 Total automated tests: **90 backend + 47 frontend = 137**, all passing.
+
+## 1 Nov (later): teacher-only, fresh start, Vercel (v4)
+- **Admin removed.** Only teachers and children. Sign-up is instant (creates school + first class); teachers add/edit classes. Hierarchy, approvals, notifications and admin dashboards deleted. PIN resets and bug review via `app.cli`.
+- **Fresh start.** Migrations squashed to `0001_initial`; local data wiped; phones drop the old IndexedDB store once. `app.cli reset-data --yes` for future resets.
+- **Fixed:** children added after the day's first sync never appeared in *Who to check today*; misleading "sync before first use" on a synced but empty class; un-scorable recordings never deleted.
+- **Vercel:** `api/index.py`, `vercel.json`, `requirements.txt`; media in Postgres; jobs run inside requests + app pump + daily cron; teacher-review speech mode; DB-backed login throttling.
+- **Verified:** 127 backend + 67 frontend tests; headless-Chrome run: sign-up → 3 children → 3 complete kiosk assessments (incl. a silent child) → sync → dashboard 3/3 done, level charts, 15 recordings in Review — no console or server errors.
 
 ## 1 Nov: student / teacher / admin workflow (v3)
 - **Roles:** the CRCC role is removed everywhere (API, app, seeder, migration `c3d1f7a2e9b4`). Three roles remain: student, teacher, admin.

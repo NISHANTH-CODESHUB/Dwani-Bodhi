@@ -2,36 +2,25 @@
 import { API_BASE } from './config';
 import { getToken, logout } from './auth';
 import type {
-  AdminDashboard,
-  AdminStudentPage,
-  AppNotification,
-  ClassActivity,
-  ConsentStatus,
-  NotificationList,
-  StudentActivity,
-  StudentFilter,
-  StudentRow,
-  TeacherRow,
-  AdminClassroom,
-  AdminUser,
-  NewUserBody,
-  SignupBody,
-  Approver,
-  SignupOptions,
-  OrgKind,
-  OrgUnitOut,
-  SchoolOut,
   Bootstrap,
   CardResponse,
   ChildOut,
   ChildProfile,
+  ClassActivity,
+  ClassroomBody,
+  ClassroomInfo,
+  ClassroomPatch,
   ConfirmBody,
   Explanation,
+  JobsState,
   LoginResponse,
-  PinChangeBody,
   MeResponse,
   Overview,
+  PinChangeBody,
+  RegionOption,
   SessionPlan,
+  SignupBody,
+  StudentActivity,
   SyncResult,
   TodayResponse,
   UnsureEntry,
@@ -112,8 +101,16 @@ const enc = encodeURIComponent;
 export const api = {
   login: (phone: string, pin: string) =>
     request<LoginResponse>('POST', '/v1/auth/login', { body: { phone, pin }, auth: false }),
-  openSession: (role: string) =>
-    request<LoginResponse>('POST', '/v1/auth/open', { body: { role }, auth: false }),
+  openSession: () => request<LoginResponse>('POST', '/v1/auth/open', { auth: false }),
+  /** Creates the teacher account with its school and first class; the response is a signed-in session. */
+  signup: (body: SignupBody) => request<LoginResponse>('POST', '/v1/auth/signup', { body, auth: false }),
+  regions: () => request<RegionOption[]>('GET', '/v1/regions', { auth: false }),
+  createClassroom: (body: ClassroomBody) =>
+    request<{ id: string; classrooms: ClassroomInfo[] }>('POST', '/v1/classrooms', { body }),
+  updateClassroom: (cid: string, body: ClassroomPatch) =>
+    request<{ id: string; classrooms: ClassroomInfo[] }>('PATCH', `/v1/classrooms/${enc(cid)}`, { body }),
+  /** Serverless deploys: finish scoring that is still queued (time-boxed on the server). */
+  runJobs: () => request<JobsState>('POST', '/v1/jobs/run', { timeoutMs: 90_000 }),
   me: () => request<MeResponse>('GET', '/v1/me'),
   changePin: (body: PinChangeBody, token?: string) =>
     request<LoginResponse>('POST', '/v1/auth/pin', { body, ...(token ? { token } : {}) }),
@@ -139,54 +136,13 @@ export const api = {
   confirm: (rid: string, body: ConfirmBody) =>
     request<{ id: string; status: string }>('POST', `/v1/responses/${enc(rid)}/confirm`, { body }),
 
-  notifications: () => request<NotificationList>('GET', '/v1/notifications'),
-  readNotification: (id: string) => request<AppNotification>('POST', `/v1/notifications/${enc(id)}/read`),
-  readAllNotifications: () => request<NotificationList>('POST', '/v1/notifications/read-all'),
-
   classActivity: (cid: string) =>
     request<ClassActivity>('GET', `/v1/classrooms/${enc(cid)}/activity`, { timeoutMs: 60_000 }),
   studentActivity: (id: string) =>
     request<StudentActivity>('GET', `/v1/children/${enc(id)}/activity`, { timeoutMs: 60_000 }),
 
-  adminDashboard: () => request<AdminDashboard>('GET', '/v1/admin/dashboard', { timeoutMs: 60_000 }),
-  adminTeachers: () => request<TeacherRow[]>('GET', '/v1/admin/teachers'),
-  adminStudents: (f: StudentFilter) => {
-    const qs = new URLSearchParams();
-    for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== null && v !== '') qs.set(k, String(v));
-    return request<AdminStudentPage>('GET', `/v1/admin/students?${qs.toString()}`);
-  },
-  updateStudent: (id: string, body: { grade?: number; consent_status?: ConsentStatus }) =>
-    request<StudentRow>('PATCH', `/v1/admin/students/${enc(id)}`, { body }),
-
   /** Timeout grows with the upload size: 2G uplinks can be as slow as ~8 KB/s. */
   sync: (form: FormData, bytes = 0) =>
     request<SyncResult>('POST', '/v1/sync', { form, timeoutMs: 120_000 + Math.ceil(bytes / 8_000) * 1000 }),
 
-  setupStatus: () => request<{ needed: boolean }>('GET', '/v1/auth/setup', { auth: false }),
-  setup: (body: { phone: string; pin: string; display_name: string }) =>
-    request<LoginResponse>('POST', '/v1/auth/setup', { body, auth: false }),
-
-  signupOptions: () => request<SignupOptions>('GET', '/v1/auth/signup-options', { auth: false }),
-  approvers: (role: string, place: { org_unit_id?: string; classroom_id?: string }) =>
-    request<Approver[]>('GET', `/v1/auth/approvers?${new URLSearchParams({ role, ...place }).toString()}`, { auth: false }),
-  /** Teachers: pending request. Admins: active at once — the response then also carries a session. */
-  signup: (body: SignupBody) =>
-    request<{ id: string; pending: boolean } & Partial<LoginResponse>>('POST', '/v1/auth/signup', { body, auth: false }),
-  approveUser: (id: string) => request<AdminUser>('POST', `/v1/admin/users/${enc(id)}/approve`),
-  rejectUser: (id: string) => request<{ deleted: string }>('DELETE', `/v1/admin/users/${enc(id)}`),
-
-  orgUnits: () => request<OrgUnitOut[]>('GET', '/v1/admin/org-units'),
-  createOrgUnit: (body: { kind: OrgKind; name: string; parent_id: string | null }) =>
-    request<{ id: string }>('POST', '/v1/admin/org-units', { body }),
-  schools: () => request<SchoolOut[]>('GET', '/v1/admin/schools'),
-  createSchool: (body: { name: string; udise_code?: string; org_unit_id: string | null }) =>
-    request<{ id: string }>('POST', '/v1/admin/schools', { body }),
-  adminClassrooms: () => request<AdminClassroom[]>('GET', '/v1/admin/classrooms'),
-  createClassroom: (body: { school_id: string; name: string; grades: number[] }) =>
-    request<{ id: string }>('POST', '/v1/admin/classrooms', { body }),
-  users: () => request<AdminUser[]>('GET', '/v1/admin/users'),
-  createUser: (body: NewUserBody) => request<{ id: string; pin?: string }>('POST', '/v1/admin/users', { body }),
-  updateUser: (id: string, body: { active?: boolean; display_name?: string; classroom_ids?: string[] }) =>
-    request<AdminUser>('PATCH', `/v1/admin/users/${enc(id)}`, { body }),
-  resetPin: (id: string) => request<{ id: string; pin: string }>('POST', `/v1/admin/users/${enc(id)}/reset-pin`),
 };

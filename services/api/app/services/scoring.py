@@ -60,25 +60,29 @@ def score_voice(db: Session, response_id: str) -> None:
     item = cp.items.get(r.item_id)
     child = db.get(Child, r.child_id)
     blob = db.scalar(select(Blob).where(Blob.response_id == r.id, Blob.kind == "audio", Blob.deleted_at.is_(None)))
-    model = get_acoustic_model()
     sim = r.payload.get("simulated_utterance")
+    if s.speech_backend == "review" and blob is not None:
+        # No acoustic model on this host: the teacher listens and confirms (1 tap) in the review queue.
+        _to_teacher(db, r, blob, "teacher review")
+        return
+    model = get_acoustic_model()
     simulated = isinstance(model, SimulatedBackend)
     if item is None or child is None or (blob is None and not (simulated and sim is not None)):
         r.status, r.verdict = "error", {"error": "missing item/child/audio"}
+        if blob is not None:
+            _retire_audio(db, blob)
         db.commit()
         return
     if simulated:
         # Dev/demo path only: the simulated backend synthesises posteriors for a declared utterance.
         if not (s.allow_simulated_audio and sim is not None):
-            r.status, r.verdict = "unsure", {"status": UNSURE, "detail": "no acoustic model configured"}
-            r.scored_at = utcnow()
-            db.commit()
+            _to_teacher(db, r, blob, "no acoustic model configured")
             return
         model.say(SimulatedUtterance(str(sim), seed=zlib.crc32(r.id.encode()) & 0xFFFF))
         wave = np.zeros(16000, dtype=np.float32)
         q = None
     else:
-        wave = decode_to_16k_mono(get_store().get(blob.key))
+        wave = decode_to_16k_mono(get_store(db).get(blob.key))
         q = signal_quality(wave)
         if not q.scorable:
             r.status, r.confidence, r.scored_at = "unsure", 0.0, utcnow()
@@ -106,6 +110,15 @@ def score_voice(db: Session, response_id: str) -> None:
     db.commit()
 
 
+def _to_teacher(db: Session, r: Response, blob: Blob | None, detail: str) -> None:
+    """Send a recording to the teacher's confirm queue. The clip is kept only for the review window."""
+    r.status, r.confidence, r.scored_at = "unsure", 0.0, utcnow()
+    r.verdict = {"status": UNSURE, "detail": detail}
+    if blob is not None:
+        _retire_audio(db, blob, keep=True)
+    db.commit()
+
+
 def _retire_audio(db: Session, blob: Blob, keep: bool = False) -> None:
     """Privacy by design: raw audio is deleted right after scoring. UNSURE clips are kept only until the
     teacher's 'listen' review window closes (max 7 days), then purged by the purge job."""
@@ -116,7 +129,7 @@ def _retire_audio(db: Session, blob: Blob, keep: bool = False) -> None:
     if s.audio_retention_hours > 0:
         blob.delete_after = utcnow() + timedelta(hours=s.audio_retention_hours)
         return
-    get_store().delete(blob.key)
+    get_store(db).delete(blob.key)
     blob.deleted_at = utcnow()
 
 
@@ -124,7 +137,7 @@ def purge_expired_blobs(db: Session) -> int:
     rows = db.scalars(select(Blob).where(Blob.deleted_at.is_(None), Blob.delete_after.is_not(None),
                                          Blob.delete_after <= utcnow())).all()
     for b in rows:
-        get_store().delete(b.key)
+        get_store(db).delete(b.key)
         b.deleted_at = utcnow()
     db.commit()
     return len(rows)

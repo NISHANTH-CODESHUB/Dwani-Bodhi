@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -13,8 +15,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select, text
+from starlette.concurrency import run_in_threadpool
 
-from .api import auth_admin, classroom, dashboard, sync
+from .api import auth, classroom, dashboard, jobs, sync
 from .config import REPO_ROOT, get_settings
 from .db import SessionLocal, create_all
 from .models import Job, LLMCall
@@ -25,26 +28,51 @@ from .services.upkeep import run_upkeep
 log = logging.getLogger("api")
 
 
-def create_app() -> FastAPI:
-    s = get_settings()
-    logging.basicConfig(level=s.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
-    @asynccontextmanager
-    async def lifespan(_: FastAPI):
+_ready = False
+_ready_lock = threading.Lock()
+
+
+def init_app() -> None:
+    """One-time start-up: safety checks, schema, content pack, approved bugs, data upkeep. Idempotent and
+    thread-safe; called from the ASGI lifespan and, as a fallback, on the first request (some serverless
+    runtimes never send lifespan events)."""
+    global _ready
+    if _ready:
+        return
+    with _ready_lock:
+        if _ready:
+            return
+        s = get_settings()
         if s.env == "prod":
             if s.jwt_secret.startswith("dev-only") or len(s.jwt_secret) < 32 or s.phone_pepper == "dev-pepper":
                 raise RuntimeError("set strong JWT_SECRET (>=32 chars) and PHONE_PEPPER in production")
-            if s.allow_simulated_audio:
-                raise RuntimeError("ALLOW_SIMULATED_AUDIO must be false in production")
+            if s.allow_simulated_audio or s.speech_backend == "simulated":
+                raise RuntimeError("production needs SPEECH_BACKEND=wav2vec2 or review, and ALLOW_SIMULATED_AUDIO=false")
             if s.auth_disabled:
                 raise RuntimeError("AUTH_DISABLED must be false in production")
-        else:
-            create_all()  # production uses `alembic upgrade head`
+            if s.is_sqlite and os.environ.get("VERCEL"):
+                raise RuntimeError("set DATABASE_URL to a Postgres database: a serverless disk is not persistent")
+        if s.auto_migrate:
+            from .migrate import upgrade_head
+            upgrade_head()
+        elif s.env != "prod":
+            create_all()  # dev/test convenience; production uses Alembic
         errs = pack().validate()
         if errs:
             raise RuntimeError(f"content pack invalid: {errs[:5]}")
         with SessionLocal() as db:
             load_approved_bugs(db)
             run_upkeep(db)
+        _ready = True
+
+
+def create_app() -> FastAPI:
+    s = get_settings()
+    logging.basicConfig(level=s.log_level, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        await run_in_threadpool(init_app)
         yield
 
     app = FastAPI(title="Dhwani-Bodhi API", version="0.1.0", lifespan=lifespan,
@@ -55,15 +83,18 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def timing(request: Request, call_next):
+        if not _ready:
+            await run_in_threadpool(init_app)
         t0 = time.perf_counter()
         resp = await call_next(request)
         resp.headers["X-Response-Time-ms"] = f"{(time.perf_counter() - t0) * 1000:.1f}"
         return resp
 
-    app.include_router(auth_admin.router)
+    app.include_router(auth.router)
     app.include_router(classroom.router)
     app.include_router(sync.router)
     app.include_router(dashboard.router)
+    app.include_router(jobs.router)
 
     @app.get("/health")
     def health() -> dict:

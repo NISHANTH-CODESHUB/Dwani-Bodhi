@@ -1909,6 +1909,18 @@ button.stat:hover {
   height: 7px;
   border-radius: 50%;
   background: currentColor;
+  flex-shrink: 0;
+}
+/* Long level/confusion names ("Addition and subtraction with carry/borrow · Not yet certain") must wrap,
+   otherwise the chip is wider than a 360px phone and the whole page scrolls sideways. */
+.band {
+  max-width: 100%;
+}
+.level-block-head .band,
+.confusion-head .band {
+  white-space: normal;
+  border-radius: 12px;
+  line-height: 1.35;
 }
 .band-known {
   background: var(--ok-50);
@@ -2006,6 +2018,17 @@ button.stat:hover {
 }
 .confusion .evidence-ex {
   margin-left: 40px;
+}
+.explain-wait {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.explain-wait .spinner-dot {
+  flex-shrink: 0;
 }
 .explain {
   margin-top: 14px;
@@ -3055,4 +3078,30 @@ button.stat:hover {
   .dtable-stack td:first-child { grid-column: 1 / -1; }
   .dtable-stack td .tag { margin-left: 0; margin-top: 2px; }
   .dtable-stack .dtable-sub { white-space: normal; }
+}
+
+/* ---- class picker: each class row has an edit button and an inline edit form ---------------- */
+.class-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.class-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.class-row-main .row-link {
+  flex: 1;
+  min-width: 0;
+}
+.class-edit {
+  padding: 14px 16px;
+  border: 1px solid var(--line, #e3e7ef);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+}
+.login-forgot {
+  text-align: center;
+  margin: 0;
 }

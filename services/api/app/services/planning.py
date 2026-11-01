@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, date, timedelta
 
 from sqlalchemy import select
@@ -9,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..learner.planner import plan_class_slate, plan_session
-from ..learner.scheduler import ChildScheduleInput, pick_today
+from ..learner.scheduler import ChildScheduleInput, ScheduledChild, pick_today
 from ..models import Child, ClassDay, Classroom, LearnerAux, Plan, Response
 from .common import pack, today
 from .learner import _last_seen, load_state
@@ -17,14 +18,23 @@ from .learner import _last_seen, load_state
 KEY_SKILLS = ["L3", "L4", "L7", "L9", "L10", "M2", "M5", "M7", "M9"]
 
 
+def roster_signature(kids: list[Child]) -> str:
+    ids = sorted(c.id for c in kids if c.consent_status == "granted")
+    return hashlib.sha256(",".join(ids).encode()).hexdigest()
+
+
 def build_today(db: Session, classroom_id: str, day: date | None = None, force: bool = False) -> ClassDay:
+    """Today's list for a class. Built once per day, and rebuilt when the consented roster changes (a child
+    added, consent recorded or withdrawn) — otherwise children added after the first sync of the day would
+    not appear until tomorrow. Children already on today's list stay on it, so progress stays stable."""
     day = day or today()
     existing = db.scalar(select(ClassDay).where(ClassDay.classroom_id == classroom_id, ClassDay.day == day))
-    if existing and not force:
+    kids = db.scalars(select(Child).where(Child.classroom_id == classroom_id, Child.deleted_at.is_(None))).all()
+    sig = roster_signature(kids)
+    if existing and not force and existing.roster_sig == sig:
         return existing
     cp = pack()
     room = db.get(Classroom, classroom_id)
-    kids = db.scalars(select(Child).where(Child.classroom_id == classroom_id, Child.deleted_at.is_(None))).all()
     states, inputs = [], []
     for c in kids:
         st = load_state(db, c, cp)
@@ -32,7 +42,14 @@ def build_today(db: Session, classroom_id: str, day: date | None = None, force: 
         states.append(st)
         inputs.append(ChildScheduleInput(c.id, st.skills, KEY_SKILLS, aux.last_assessed if aux else None,
                                          bool(st.recheck), c.consent_status == "granted"))
-    chosen = pick_today(inputs, day, room.daily_kiosk_budget_min if room else 12.0)
+    budget = room.daily_kiosk_budget_min if room else 12.0
+    chosen = pick_today(inputs, day, budget)
+    if existing and not force:
+        consented = {c.id for c in kids if c.consent_status == "granted"}
+        keep = [ScheduledChild(**e) for e in (existing.children or []) if e.get("child_id") in consented]
+        have = {k.child_id for k in keep}
+        ranked = pick_today(inputs, day, budget_minutes=1e6)
+        chosen = keep + [r for r in ranked if r.child_id not in have][:max(0, len(chosen) - len(keep))]
     for sc in chosen:  # ensure every chosen child has a fresh offline plan
         has_plan = db.scalar(select(Plan.id).where(Plan.child_id == sc.child_id, Plan.consumed.is_(False)))
         if not has_plan:
@@ -45,10 +62,13 @@ def build_today(db: Session, classroom_id: str, day: date | None = None, force: 
     slate = plan_class_slate(consented or states, cp, recent, n=2)
     if existing:
         existing.children = [sc.__dict__ for sc in chosen]
-        existing.slate_problems = slate
+        if force or not existing.slate_problems:  # keep the problems already written on the board today
+            existing.slate_problems = slate
+        existing.roster_sig = sig
         row = existing
     else:
-        row = ClassDay(classroom_id=classroom_id, day=day, children=[sc.__dict__ for sc in chosen], slate_problems=slate)
+        row = ClassDay(classroom_id=classroom_id, day=day, children=[sc.__dict__ for sc in chosen],
+                       slate_problems=slate, roster_sig=sig)
         db.add(row)
     try:
         db.commit()

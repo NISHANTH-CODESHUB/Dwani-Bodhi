@@ -89,8 +89,7 @@ an activity that has been vetted by a pedagogy reviewer.
 | Role | What they get |
 |---|---|
 | 🧒 **Student** | A friendly Hindi **kiosk** with a mascot (*Cheenu*). Children read aloud and tap answers. They never see scores, and every session ends on a success. |
-| 👩‍🏫 **Teacher** | Class roster, slate capture, weekly **Action Card**, per-child profiles with explanations, a 1-tap confirm queue for uncertain verdicts, student activity timelines, and printable ArUco ID cards. |
-| 🏛️ **Admin** | A state → district → block → cluster → school → class hierarchy, account approvals, notifications, KPIs, level distributions and activity charts. Admins see only their own part of the hierarchy, and students appear by register number (`STU-<year>-<seq>`), never by name. |
+| 👩‍🏫 **Teacher** | Creates their own account in a minute (no approval), adds their classes, class roster, slate capture, weekly **Action Card**, per-child profiles with explanations, a 1-tap confirm queue for uncertain verdicts, student activity timelines, and printable ArUco ID cards. |
 
 ---
 
@@ -99,7 +98,7 @@ an activity that has been vetted by a pedagogy reviewer.
 ```
 Phone (PWA, offline-first)                       Server (India region)                        Claude API
 ┌──────────────────────────┐   HTTPS batch sync  ┌──────────────────────────────────┐  crops + de-identified JSON
-│ Kiosk · Teacher · Admin  │ ──────────────────► │ API (FastAPI, stateless, N reps) │ ─────────────────────────►
+│ Kiosk · Teacher app      │ ──────────────────► │ API (FastAPI, stateless, N reps) │ ─────────────────────────►
 │ Dexie: roster WITH names │ UUIDs only, idempot.│  /v1/sync → blobs + job queue    │
 │ plans, items, queue      │ ◄────────────────── │ Workers (scale per queue):       │
 │ VAD, discontinue rules   │ plans, cards, today │  speech  ECCL (Wav2Vec2-CTC)     │
@@ -143,11 +142,10 @@ Full details: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ```
 dhwani-bodhi/
-├── apps/web/                  # Offline-first PWA: child kiosk, teacher app, admin dashboard
+├── apps/web/                  # Offline-first PWA: child kiosk + teacher app
 │   └── src/
 │       ├── kiosk/             #   child-facing reading & tap activities (Cheenu mascot)
 │       ├── teacher/           #   roster, slate capture, Action Card, profiles, confirm queue
-│       ├── admin/             #   hierarchy, approvals, dashboards
 │       ├── lib/               #   offline sync, IndexedDB, audio/VAD, TTS, auth
 │       └── i18n/hi.ts         #   all UI strings (Hindi)
 ├── services/api/              # FastAPI backend + workers
@@ -224,11 +222,11 @@ npm run dev                  # → http://localhost:5173 (proxies /v1 to :8000)
 
 ### 4. Log in
 
-- `python -m app.demo` creates a **teacher** and an **admin** account with random phone numbers and strong
-  random PINs. They are printed once and saved to the git-ignored `data/demo-credentials.txt`.
-  Rotate them with `python -m app.demo --reset-credentials`.
-- On a **fresh database**, the app asks you to create the top-level admin first. That admin then builds the
-  hierarchy and creates or approves the other accounts.
+- Open the app and tap **New teacher? Create an account**: name, mobile number, PIN, school, class and grades.
+  The account is **active immediately** (there is no admin and no approval step) and you land in your class.
+- Optional demo data: `python -m app.demo` seeds a class with a teacher whose random phone number and PIN are
+  printed once and saved to the git-ignored `data/demo-credentials.txt`.
+- Fresh start at any time: `python -m app.cli reset-data --yes` deletes every account, class, child and answer.
 
 👉 Step-by-step usage: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) (also in the app under **मेनू → उपयोग गाइड**).
 
@@ -247,12 +245,13 @@ All settings live in `.env` (see [`.env.example`](.env.example)). The main ones:
 | `LLM_MODE` | `auto` / offline behaviour | `auto` |
 | `MODEL_SLATE` / `MODEL_CARD` / `MODEL_EXPLAIN` / `MODEL_HYPOTHESIS` | Claude model per task | Sonnet 5.5 / Opus 5.5 |
 | `DAILY_LLM_BUDGET_USD` | Hard daily cap on Claude spend | `5` |
-| `SPEECH_BACKEND` | `wav2vec2` (real) or `simulated` (demos/tests only) | `simulated` |
+| `SPEECH_BACKEND` | `wav2vec2` (automatic scoring) · `review` (teacher listens and confirms) · `simulated` (tests only) | `simulated` (`review` on Vercel) |
 | `SPEECH_MODEL_ID` | Hugging Face acoustic model | Vakyansh Hindi |
 | `BLOB_BACKEND` | `local` or `s3` (use an Indian region) | `local` |
 | `AUDIO_RETENTION_HOURS` | Raw audio retention after scoring | `0` |
 | `SLATE_CROP_RETENTION_DAYS` | Retention for per-child slate crops | `30` |
-| `ADMIN_SELF_SIGNUP` | Admin sign-ups active immediately (`false` = needs approval) | `true` |
+| `BLOB_BACKEND` = `db`, `INLINE_JOBS`, `AUTO_MIGRATE` | Serverless mode: media in Postgres, scoring inside requests, migrations on start-up | on when `VERCEL=1` |
+| `CRON_SECRET` | Protects the daily maintenance endpoint `/v1/cron/tick` (Vercel Cron) | — |
 
 ---
 
@@ -301,7 +300,40 @@ python eval/smoke_speech_model.py          # real-model smoke test (loads Vakyan
 
 ## 🌐 Deployment
 
-**Pilot setup: one VM in an Indian cloud region**
+### Option A — Vercel (one click, free tier)
+
+The repo is ready for Vercel: the PWA is served as static files and the FastAPI backend runs as a Python
+serverless function (`api/index.py`, packages from `requirements.txt`, routing in `vercel.json`).
+
+1. **Import the repo** at [vercel.com/new](https://vercel.com/new) → *Import Git Repository* →
+   `Dwani-Bodhi`. Leave every build setting as it is (they come from `vercel.json`).
+2. **Add a Postgres database**: in the project, *Storage* → *Create Database* → **Neon** (free). This sets
+   `DATABASE_URL` automatically. A serverless disk is not persistent, so SQLite is refused on Vercel.
+3. **Set environment variables** (*Settings → Environment Variables*):
+
+   | Variable | Value |
+   |---|---|
+   | `JWT_SECRET` | a long random string, e.g. `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+   | `PHONE_PEPPER` | another long random string (never change it later: phone logins depend on it) |
+   | `CRON_SECRET` | a random string (Vercel Cron uses it for the daily maintenance job) |
+   | `ANTHROPIC_API_KEY` | optional: Claude reads slates and writes Action Cards; without it templates are used |
+
+4. **Deploy.** The first request creates the database tables (Alembic, `AUTO_MIGRATE`). Open the URL,
+   tap **New teacher? Create an account**, and you are in.
+
+What changes on Vercel (all automatic when `VERCEL=1`):
+
+| | Vercel | Docker / VM |
+|---|---|---|
+| Reading (voice) answers | Go to the teacher's **Review** queue (listen → *Read correctly* / *wrongly*): the Wav2Vec2 model is too large for a serverless function | Scored automatically (ECCL) |
+| Background work | Runs inside the sync request, plus a pump call from the app and a daily cron | Separate worker processes |
+| Media (audio, slate crops) | Stored in Postgres, deleted after review / retention | Local disk or S3 |
+
+To get automatic reading scores while keeping the app on Vercel, run a speech worker on any machine with
+4 GB RAM against the same database (`SPEECH_BACKEND=wav2vec2 python -m app.jobs.worker --queues speech`)
+and set `INLINE_QUEUES=vision,learner,llm` on Vercel.
+
+### Option B — one VM with Docker (full features, data in India)
 
 ```bash
 cp .env.example .env    # set POSTGRES_PASSWORD, JWT_SECRET, PHONE_PEPPER, SITE_ADDRESS, ANTHROPIC_API_KEY
@@ -317,6 +349,15 @@ docker compose up -d --scale worker-speech=3    # scale speech scoring horizonta
 
 Backups, monitoring and scaling: [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
+### Operator commands
+
+```bash
+python -m app.cli reset-pin --phone 98xxxxxxxx   # a teacher forgot the PIN (new PIN printed once)
+python -m app.cli bugs [--approve ID | --reject ID]  # review misconceptions proposed by Claude
+python -m app.cli reset-data --yes               # delete all teachers, classes, children and history
+```
+Run them anywhere with `DATABASE_URL` pointing at the production database.
+
 ---
 
 ## 🔒 Privacy & child safety
@@ -324,12 +365,13 @@ Backups, monitoring and scaling: [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 Designed for India's **DPDP Act 2023**, with verifiable parental consent.
 
 - 🧒 **Child names never leave the phone.** The server stores only UUIDs, grade and register number.
-- 🎙️ **Raw audio is deleted right after scoring.**
+- 🎙️ **Raw audio is deleted right after scoring** (or after the 7-day window when the teacher reviews it).
 - 🖼️ **No faces to AI.** Slates are cropped by ArUco geometry before any API call, and full classroom photos are deleted.
 - 🤖 **Claude sees only cropped slates and de-identified JSON.** Explanations use a `{{child}}` placeholder that the phone fills in locally.
 - ✅ **Consent is enforced at sync.** Sessions for children without granted consent are rejected.
 - 🗑️ **Right to erasure.** `DELETE /v1/children/{id}` removes every trace of the child.
-- 🔐 PBKDF2-hashed PINs with a guessability policy, lockout, HMAC-peppered phone numbers, JWT and TLS.
+- 👩‍🏫 **Only the class teacher sees a class.** There is no admin role and no cross-school view.
+- 🔐 PBKDF2-hashed PINs with a guessability policy, database-backed lockout, HMAC-peppered phone numbers, JWT and TLS.
 - 🌱 **Child wellbeing:** no scores shown to children, sessions end on a success, no facial recognition, no third-party analytics.
 
 Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md).
@@ -342,7 +384,7 @@ Full policy: [`docs/PRIVACY.md`](docs/PRIVACY.md).
 |---|---|
 | [`docs/GUIDE.md`](docs/GUIDE.md) | The full design guide: problem, landscape, the five novelties in depth, evaluation plan |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, data flow, scaling path, module map |
-| [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) | How teachers and admins use the app day to day |
+| [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) | How teachers use the app day to day |
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | DPDP compliance and child-safety measures |
 | [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | Operations: deploy, scale, back up, monitor |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Log of design decisions |

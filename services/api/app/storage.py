@@ -1,12 +1,16 @@
-"""Blob storage abstraction: local disk (dev / single VM) or any S3-compatible store (scale-out)."""
+"""Blob storage abstraction: local disk (dev / single VM), any S3-compatible store (scale-out), or the
+database itself (serverless hosts with no persistent disk, e.g. Vercel + Postgres)."""
 
 from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from .config import get_settings
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 
 class BlobStore(Protocol):
@@ -58,13 +62,46 @@ class S3BlobStore:  # pragma: no cover - exercised in deployment
         self.s3.delete_object(Bucket=self.bucket, Key=key)
 
 
+class DbBlobStore:
+    """Bytes in the `blob_data` table, inside the caller's transaction: a media row and its bytes commit
+    (or roll back) together. Media is small and short-lived (audio <= 2 MB, deleted after scoring/review;
+    classroom photos deleted after cropping), so this suits pilot-scale serverless deploys."""
+
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def put(self, key: str, data: bytes, mime: str) -> None:
+        from .models import BlobData
+
+        self.db.merge(BlobData(key=key, data=data, mime=mime))
+        self.db.flush()
+
+    def get(self, key: str) -> bytes:
+        from .models import BlobData
+
+        row = self.db.get(BlobData, key)
+        if row is None:
+            raise FileNotFoundError(key)
+        return bytes(row.data)
+
+    def delete(self, key: str) -> None:
+        from sqlalchemy import delete
+
+        from .models import BlobData
+
+        self.db.execute(delete(BlobData).where(BlobData.key == key))
+
+
 _store: BlobStore | None = None
 
 
-def get_store() -> BlobStore:
+def get_store(db: Session) -> BlobStore:
+    """The configured store. `db` is the caller's session (used by the database backend)."""
     global _store
+    s = get_settings()
+    if s.blob_backend == "db":
+        return DbBlobStore(db)
     if _store is None:
-        s = get_settings()
         _store = S3BlobStore(s.s3_bucket or "", s.s3_endpoint) if s.blob_backend == "s3" else LocalBlobStore(s.blob_dir)
     return _store
 

@@ -2,8 +2,12 @@
 import { useSyncExternalStore } from 'react';
 import type { ClassroomInfo, User } from './types';
 
-const KEY = 'db.auth.v1';
-const ROOM_KEY = 'db.classroom.v1';
+// v2: teacher-only accounts (fresh start). Older keys are removed on load.
+const KEY = 'db.auth.v2';
+const ROOM_KEY = 'db.classroom.v2';
+const LEGACY_KEYS = ['db.auth.v1', 'db.classroom.v1'];
+
+if (typeof localStorage !== 'undefined') for (const k of LEGACY_KEYS) localStorage.removeItem(k);
 
 export interface AuthState {
   token: string;
@@ -52,11 +56,6 @@ export function logout(): void {
   current = null;
   localStorage.removeItem(KEY);
   emit();
-}
-
-/** Landing screen for a role: teachers their class, admins their dashboard. */
-export function homePath(role: string): string {
-  return role === 'admin' ? '/admin' : '/';
 }
 
 export function getClassroomId(): string | null {

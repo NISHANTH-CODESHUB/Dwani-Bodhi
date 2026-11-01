@@ -4,6 +4,12 @@ jobs:
   api:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: services/api } }
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: dhwani, POSTGRES_PASSWORD: ci, POSTGRES_DB: dhwani }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -13,8 +19,11 @@ jobs:
       - run: pytest -q
       - name: content pack validates
         run: python -c "from app.content.pack import load_pack; from pathlib import Path; e=load_pack(Path('../../content/packs/hi-IN')).validate(); assert not e, e"
-      - name: migrations apply cleanly
+      - name: migrations apply cleanly (SQLite)
         run: DATABASE_URL=sqlite:////tmp/ci.db alembic upgrade head
+      - name: migrations apply cleanly and match the models (Postgres, as on Vercel/Neon)
+        env: { DATABASE_URL: "postgres://dhwani:ci@localhost:5432/dhwani" }
+        run: alembic upgrade head && alembic check
   web:
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: apps/web } }
@@ -25,3 +34,17 @@ jobs:
       - run: npm ci
       - run: npm test -- --run
       - run: npm run build
+  vercel-entry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - name: the serverless entry point imports and serves /health with only requirements.txt
+        run: |
+          DATABASE_URL=sqlite:////tmp/v.db python -c "
+          import sys; sys.path.insert(0, 'api')
+          from starlette.testclient import TestClient
+          import index
+          assert TestClient(index.app).get('/api/index?__vp=/health').json()['ok']"
