@@ -1,0 +1,162 @@
+# More on-phone numeracy (EGMA subtasks). Every distractor reflects a typical early-grade error.
+#
+# tap_count — counting objects: `text` holds the objects (shown in rows of five, like a ten-frame),
+#   distractors are the classic counting slips: one less (skipped an object), one more (counted one twice).
+# tap_missing — number patterns: `text` is the sequence with "__" for the gap. Distractors: the
+#   neighbour of the gap (copied the last number), off-by-ten, and concatenation/reversal where relevant.
+
+# ---------------------------------------------------------------- counting objects (M1)
+- id: m.count.3
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "🍎🍎🍎"
+  prompt_hi: "How many apples? Count and touch the number."
+  answer: "3"
+  options: [{value: "3"}, {value: "2"}, {value: "4"}, {value: "5"}]
+- id: m.count.5
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "⭐⭐⭐⭐⭐"
+  prompt_hi: "How many stars? Count and touch the number."
+  answer: "5"
+  options: [{value: "5"}, {value: "4"}, {value: "6"}, {value: "3"}]
+- id: m.count.7
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "🐟🐟🐟🐟🐟 🐟🐟"
+  prompt_hi: "How many fish? Count and touch the number."
+  answer: "7"
+  options: [{value: "7"}, {value: "6"}, {value: "8"}, {value: "5"}]
+- id: m.count.9
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "🌸🌸🌸🌸🌸 🌸🌸🌸🌸"
+  prompt_hi: "How many flowers? Count and touch the number."
+  answer: "9"
+  options: [{value: "9"}, {value: "8"}, {value: "10"}, {value: "6"}]
+- id: m.count.12
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "🥭🥭🥭🥭🥭 🥭🥭🥭🥭🥭 🥭🥭"
+  prompt_hi: "How many mangoes? Count and touch the number."
+  answer: "12"
+  options: [{value: "12"}, {value: "21", probe: NUM_REVERSAL}, {value: "11"}, {value: "13"}]
+- id: m.count.14
+  type: tap_count
+  grade: 1
+  skills: [M1]
+  text: "🎈🎈🎈🎈🎈 🎈🎈🎈🎈🎈 🎈🎈🎈🎈"
+  prompt_hi: "How many balloons? Count and touch the number."
+  answer: "14"
+  options: [{value: "14"}, {value: "41", probe: NUM_REVERSAL}, {value: "13"}, {value: "15"}]
+- id: m.count.16
+  type: tap_count
+  grade: 2
+  skills: [M1]
+  text: "🐥🐥🐥🐥🐥 🐥🐥🐥🐥🐥 🐥🐥🐥🐥🐥 🐥"
+  prompt_hi: "How many chicks? Count and touch the number."
+  answer: "16"
+  options: [{value: "16"}, {value: "61", probe: NUM_REVERSAL}, {value: "15"}, {value: "17"}]
+- id: m.count.19
+  type: tap_count
+  grade: 2
+  skills: [M1]
+  text: "🍌🍌🍌🍌🍌 🍌🍌🍌🍌🍌 🍌🍌🍌🍌🍌 🍌🍌🍌🍌"
+  prompt_hi: "How many bananas? Count and touch the number."
+  answer: "19"
+  options: [{value: "19"}, {value: "91", probe: NUM_REVERSAL}, {value: "18"}, {value: "20"}]
+
+# ---------------------------------------------------------------- missing number (M1 / M2 / M5)
+- id: m.miss.4
+  type: tap_missing
+  grade: 1
+  skills: [M1]
+  text: "2, 3, __, 5"
+  prompt_hi: "Which number is missing?"
+  answer: "4"
+  options: [{value: "4"}, {value: "3"}, {value: "6"}, {value: "1"}]
+- id: m.miss.8
+  type: tap_missing
+  grade: 1
+  skills: [M1]
+  text: "6, 7, __, 9"
+  prompt_hi: "Which number is missing?"
+  answer: "8"
+  options: [{value: "8"}, {value: "7"}, {value: "10"}, {value: "5"}]
+- id: m.miss.6down
+  type: tap_missing
+  grade: 1
+  skills: [M1]
+  text: "9, 8, 7, __"
+  prompt_hi: "Counting down. Which number comes next?"
+  answer: "6"
+  options: [{value: "6"}, {value: "8"}, {value: "10"}, {value: "5"}]
+- id: m.miss.13
+  type: tap_missing
+  grade: 1
+  skills: [M1]
+  text: "11, 12, __, 14"
+  prompt_hi: "Which number is missing?"
+  answer: "13"
+  options: [{value: "13"}, {value: "31", probe: NUM_REVERSAL}, {value: "12"}, {value: "15"}]
+- id: m.miss.18
+  type: tap_missing
+  grade: 1
+  skills: [M1]
+  text: "16, 17, __, 19"
+  prompt_hi: "Which number is missing?"
+  answer: "18"
+  options: [{value: "18"}, {value: "81", probe: NUM_REVERSAL}, {value: "17"}, {value: "20"}]
+- id: m.miss.20
+  type: tap_missing
+  grade: 2
+  skills: [M1, M5]
+  text: "17, 18, 19, __"
+  prompt_hi: "Which number comes next?"
+  answer: "20"
+  options: [{value: "20"}, {value: "110", probe: NUM_CONCAT}, {value: "18"}, {value: "21"}]
+- id: m.miss.tens40
+  type: tap_missing
+  grade: 2
+  skills: [M2, M5]
+  text: "10, 20, 30, __"
+  prompt_hi: "Counting in tens. Which number comes next?"
+  answer: "40"
+  options: [{value: "40"}, {value: "31"}, {value: "34"}, {value: "50"}]
+- id: m.miss.40
+  type: tap_missing
+  grade: 2
+  skills: [M2, M5]
+  text: "38, 39, __, 41"
+  prompt_hi: "Which number is missing?"
+  answer: "40"
+  options: [{value: "40"}, {value: "310", probe: NUM_CONCAT}, {value: "30"}, {value: "42"}]
+- id: m.miss.65
+  type: tap_missing
+  grade: 2
+  skills: [M2]
+  text: "63, 64, __, 66"
+  prompt_hi: "Which number is missing?"
+  answer: "65"
+  options: [{value: "65"}, {value: "56", probe: NUM_REVERSAL}, {value: "64"}, {value: "75"}]
+- id: m.miss.tens70
+  type: tap_missing
+  grade: 2
+  skills: [M2, M5]
+  text: "40, 50, 60, __"
+  prompt_hi: "Counting in tens. Which number comes next?"
+  answer: "70"
+  options: [{value: "70"}, {value: "61"}, {value: "600", probe: NUM_CONCAT}, {value: "80"}]
+- id: m.miss.100
+  type: tap_missing
+  grade: 2
+  skills: [M3, M5]
+  text: "97, 98, 99, __"
+  prompt_hi: "Which number comes next?"
+  answer: "100"
+  options: [{value: "100"}, {value: "910", probe: NUM_CONCAT}, {value: "90"}, {value: "1000", probe: NUM_ZERO_PLACE}]

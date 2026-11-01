@@ -1,0 +1,13 @@
+id: east-up-bihar
+name: Eastern UP / Bihar (Bhojpuri-Awadhi-Maithili speaking belt)
+notes: >
+  Common spoken-variety features that must NOT be scored as reading errors.
+  VERIFY with local teachers; add/remove per district. Confirm with listen-and-repeat control items.
+tolerate:
+  - {from: "व", to: "ब"}
+  - {from: "श", to: "स"}
+  - {from: "ष", to: "स"}
+  - {from: "ण", to: "न"}
+  - {from: "ज़", to: "ज"}
+  - {from: "फ़", to: "फ"}
+prothesis: true

@@ -1,0 +1,20 @@
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+	@api path /v1/* /health /metrics /docs /openapi.json
+	handle @api {
+		reverse_proxy {$API_UPSTREAM:api:8000}
+	}
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(self), microphone=(self), geolocation=()"
+	}
+	@sw path /sw.js /index.html /manifest.webmanifest
+	header @sw Cache-Control "no-cache"
+}

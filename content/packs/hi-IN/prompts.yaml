@@ -1,0 +1,21 @@
+# Cheenu's lines. Ideally recorded by a warm human voice (audio_prompts/<key>.mp3); the app falls back
+# to on-device TTS when a recording is missing.
+welcome: "Hello! I am Cheenu. Come, let's play together!"
+akshara: "Say the sound of this letter."
+word: "Read this word."
+nonword: "Read this funny word."
+passage: "Read this story aloud."
+repeat: "Say it after me."
+question: "Now tell me —"
+tap: "Touch the right number."
+great: "Wow! Very good!"
+next: "Come on, next one!"
+try_again_louder: "Say it a little louder."
+bye: "Well done! You helped Cheenu fly!"
+# Practice examples (EGRA convention): before the first scored item of each reading task Cheenu models one
+# example, then hands over. Examples are never test items and are not scored.
+example_intro: "Listen to me first."
+example_akshara: "छ"
+example_word: "नल"
+example_nonword: "बोमा"
+your_turn: "Now it's your turn!"

@@ -1,0 +1,77 @@
+# Word reading. Minimal-pair design: `probes` lists the confusion each word is built to reveal,
+# `pair` the mis-reading it is contrasted with (guide §6.3.1). DRAFT — pedagogy lead to vet familiarity.
+
+# --- L6: blending without matras ------------------------------------------------------------
+- {id: hi.w.ghar,   type: word, grade: 1, text: "घर",   skills: [L6], probes: [ASP], pair: "गर"}
+- {id: hi.w.kamal,  type: word, grade: 1, text: "कमल",  skills: [L6]}
+- {id: hi.w.namak,  type: word, grade: 1, text: "नमक",  skills: [L6]}
+- {id: hi.w.jal,    type: word, grade: 1, text: "जल",   skills: [L6]}
+- {id: hi.w.bas,    type: word, grade: 1, text: "बस",   skills: [L6], probes: [ASP, VIS]}
+- {id: hi.w.matar,  type: word, grade: 1, text: "मटर",  skills: [L6]}
+- {id: hi.w.kalam,  type: word, grade: 1, text: "कलम",  skills: [L6]}
+- {id: hi.w.mahal,  type: word, grade: 1, text: "महल",  skills: [L6]}
+- {id: hi.w.phal,   type: word, grade: 1, text: "फल",   skills: [L6], probes: [ASP], pair: "पल"}
+- {id: hi.w.ban,    type: word, grade: 1, text: "बन",   skills: [L6], probes: [VIS], pair: "वन"}
+- {id: hi.w.van,    type: word, grade: 1, text: "वन",   skills: [L6], probes: [VIS], pair: "बन"}
+- {id: hi.w.chhat,  type: word, grade: 1, text: "छत",   skills: [L6], probes: [ASP], pair: "चत"}
+- {id: hi.w.man,    type: word, grade: 1, text: "मन",   skills: [L6], probes: [VIS], pair: "भन"}
+
+# --- L4/L7: matras (short/long i, u — MLEN) ---------------------------------------------------
+- {id: hi.w.nadi,   type: word, grade: 1, text: "नदी",  skills: [L7, L4], probes: [MLEN], pair: "नदि"}
+- {id: hi.w.peela,  type: word, grade: 1, text: "पीला", skills: [L7, L4], probes: [MLEN, ASP], pair: "पिला"}
+- {id: hi.w.meetha, type: word, grade: 1, text: "मीठा", skills: [L7, L4], probes: [MLEN], pair: "मिठा"}
+- {id: hi.w.din,    type: word, grade: 1, text: "दिन",  skills: [L7, L4], probes: [MLEN], pair: "दीन"}
+- {id: hi.w.paani,  type: word, grade: 1, text: "पानी", skills: [L7, L4], probes: [MLEN], pair: "पानि"}
+- {id: hi.w.kheer,  type: word, grade: 1, text: "खीर",  skills: [L7, L4], probes: [MLEN, ASP], pair: "कीर"}
+- {id: hi.w.phool,  type: word, grade: 2, text: "फूल",  skills: [L7, L5], probes: [MLEN, ASP], pair: "फुल"}
+- {id: hi.w.suraj,  type: word, grade: 2, text: "सूरज", skills: [L7, L5], probes: [MLEN], pair: "सुरज"}
+- {id: hi.w.dhoop,  type: word, grade: 2, text: "धूप",  skills: [L7, L5], probes: [MLEN, ASP], pair: "धुप"}
+- {id: hi.w.chiriya, type: word, grade: 2, text: "चिड़िया", skills: [L7, L4], probes: [MLEN]}
+- {id: hi.w.gudiya, type: word, grade: 2, text: "गुड़िया", skills: [L7, L5], probes: [MLEN]}
+- {id: hi.w.kitab,  type: word, grade: 1, text: "किताब", skills: [L7, L4], probes: [MDROP, MLEN], pair: "कताब"}
+
+# --- L5/L7: e/ai, o/au (MSWAP), matra drop (MDROP) -------------------------------------------
+- {id: hi.w.mela,   type: word, grade: 2, text: "मेला", skills: [L7, L5], probes: [MSWAP, MDROP], pair: "मैला"}
+- {id: hi.w.kela,   type: word, grade: 1, text: "केला", skills: [L7, L5], probes: [MDROP, MSWAP], pair: "कला"}
+- {id: hi.w.ber,    type: word, grade: 2, text: "बेर",  skills: [L7, L5], probes: [MSWAP, VIS], pair: "बैर"}
+- {id: hi.w.mor,    type: word, grade: 1, text: "मोर",  skills: [L7, L5], probes: [MSWAP, MDROP], pair: "मौर"}
+- {id: hi.w.roti,   type: word, grade: 1, text: "रोटी", skills: [L7, L5], probes: [MDROP, MLEN]}
+- {id: hi.w.thaila, type: word, grade: 2, text: "थैला", skills: [L7, L5], probes: [MSWAP, VIS, ASP], pair: "यैला"}
+
+# --- ASP: aspiration minimal pairs -------------------------------------------------------------
+- {id: hi.w.bhaalu, type: word, grade: 1, text: "भालू", skills: [L7, L5], probes: [ASP, MLEN], pair: "बालू"}
+- {id: hi.w.khaana, type: word, grade: 1, text: "खाना", skills: [L7, L4], probes: [ASP, VIS], pair: "काना"}
+- {id: hi.w.thaali, type: word, grade: 1, text: "थाली", skills: [L7, L4], probes: [ASP, MLEN], pair: "ताली"}
+- {id: hi.w.taali,  type: word, grade: 1, text: "ताली", skills: [L7, L4], probes: [ASP, MLEN], pair: "थाली"}
+- {id: hi.w.dhaaga, type: word, grade: 2, text: "धागा", skills: [L7, L4], probes: [ASP, VIS], pair: "दागा"}
+- {id: hi.w.jhanda, type: word, grade: 2, text: "झंडा", skills: [L7, L5], probes: [ASP, NAS], pair: "जंडा"}
+- {id: hi.w.thanda, type: word, grade: 2, text: "ठंडा", skills: [L7, L5], probes: [ASP, NAS], pair: "टंडा"}
+- {id: hi.w.dhol,   type: word, grade: 2, text: "ढोल",  skills: [L7, L5], probes: [ASP], pair: "डोल"}
+
+# --- VIS: visually similar glyphs -----------------------------------------------------------------
+- {id: hi.w.ghadi,  type: word, grade: 2, text: "घड़ी", skills: [L7, L4], probes: [VIS, ASP], pair: "धड़ी"}
+
+# --- NAS: nasalisation ------------------------------------------------------------------------------
+- {id: hi.w.santra, type: word, grade: 2, text: "संतरा", skills: [L7, L5], probes: [NAS], pair: "सतरा"}
+- {id: hi.w.aankh,  type: word, grade: 2, text: "आँख",  skills: [L7, L5], probes: [NAS, ASP], pair: "आख"}
+- {id: hi.w.chaand, type: word, grade: 1, text: "चाँद", skills: [L7, L5], probes: [NAS], pair: "चाद"}
+- {id: hi.w.bandar, type: word, grade: 1, text: "बंदर", skills: [L7, L5], probes: [NAS, VIS], pair: "बदर"}
+
+# --- L8: conjuncts ------------------------------------------------------------------------------------
+- {id: hi.w.bachcha, type: word, grade: 2, text: "बच्चा", skills: [L8], probes: [CONJ]}
+- {id: hi.w.patta,  type: word, grade: 2, text: "पत्ता", skills: [L8], probes: [CONJ]}
+- {id: hi.w.kutta,  type: word, grade: 2, text: "कुत्ता", skills: [L8], probes: [CONJ]}
+- {id: hi.w.achchha, type: word, grade: 2, text: "अच्छा", skills: [L8], probes: [CONJ]}
+- {id: hi.w.pyaas,  type: word, grade: 3, text: "प्यास", skills: [L8], probes: [CONJ], pair: "पियास"}
+- {id: hi.w.pyaar,  type: word, grade: 3, text: "प्यार", skills: [L8], probes: [CONJ], pair: "पियार"}
+- {id: hi.w.school, type: word, grade: 2, text: "स्कूल", skills: [L8, L5], probes: [CONJ, MLEN]}
+- {id: hi.w.billi,  type: word, grade: 2, text: "बिल्ली", skills: [L8, L4], probes: [CONJ, MLEN]}
+
+# --- Nonwords (EGRA invented-word task): pure decoding, cannot be memorised. DRAFT — vet that none
+#     is an actual word in local usage.
+- {id: hi.nw.bamat, type: nonword, grade: 1, text: "बमट", skills: [L6], probes: [VIS, ASP]}
+- {id: hi.nw.lasak, type: nonword, grade: 1, text: "लसक", skills: [L6]}
+- {id: hi.nw.peema, type: nonword, grade: 1, text: "पीमा", skills: [L7, L4], probes: [MLEN, ASP]}
+- {id: hi.nw.nookal, type: nonword, grade: 2, text: "नूकल", skills: [L7, L5], probes: [MLEN]}
+- {id: hi.nw.kema,  type: nonword, grade: 2, text: "केमा", skills: [L7, L5], probes: [MSWAP, MDROP]}
+- {id: hi.nw.sipar, type: nonword, grade: 2, text: "सिपर", skills: [L7, L4], probes: [MLEN, ASP]}

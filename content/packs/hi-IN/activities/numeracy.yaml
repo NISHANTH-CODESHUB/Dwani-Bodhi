@@ -1,0 +1,187 @@
+# Vetted remedial activity library — numeracy (guide §6.5). `targets` include bug ids and remediation
+# tags from app/diagnosis/bugs.py so Action Cards can match a confirmed misconception to an activity.
+
+- id: num.teeli_bandal
+  title_hi: Matchstick bundles
+  title_en: Matchstick bundles (place value)
+  domain: numeracy
+  levels: [number_99, ops_basic, ops_regroup]
+  targets: [M5, M2, place_value, ADD_ALL_DIGITS, NUM_REVERSAL]
+  materials: [matchsticks, rubber_bands]
+  steps:
+    - hi: "Make a bundle of ten matchsticks (tie it with a rubber band). Bundle = ten, loose stick = one."
+    - hi: "Say a number (like 47). Children put down 4 bundles and 7 loose sticks."
+    - hi: "Now ask them to make 74. Ask: what is the difference between the two?"
+  source: "Adapted from Pratham TaRL bundles-and-sticks (public)"
+
+- id: num.bandal_kholo
+  title_hi: Open a bundle (understand borrowing)
+  title_en: Open a bundle (borrowing concept)
+  domain: numeracy
+  levels: [ops_regroup]
+  targets: [M9, borrow_concept, SUB_SMALLER_FROM_LARGER, SUB_ALWAYS_BORROW]
+  materials: [matchsticks, rubber_bands, slate, chalk]
+  steps:
+    - hi: "Make 52 with matchsticks: 5 bundles, 2 loose. Question: take away 19 from 52."
+    - hi: "Ask: can we take 9 away from 2 loose sticks? No — so open one bundle."
+    - hi: "Now take 9 from the 12 loose sticks, and 1 from the 4 bundles. Left: 3 bundles 3 sticks = 33."
+    - hi: "Write the same sum on the slate and match each step. Discuss: why is 'always take the smaller digit from the bigger one' wrong?"
+  source: "Adapted from Pratham TaRL operations with bundles (public)"
+
+- id: num.udhaar_kadam
+  title_hi: Borrowing step by step
+  title_en: Borrowing step by step
+  domain: numeracy
+  levels: [ops_regroup, three_digit]
+  targets: [M9, M10, borrow_procedure, SUB_BORROW_NO_DECREMENT, SUB_BORROW_ACROSS_ZERO]
+  materials: [slate, chalk, matchsticks]
+  steps:
+    - hi: "Write a sum on the slate. Teach them, when borrowing, to cross out the next digit and write one less (5 → 4)."
+    - hi: "Each child says the step aloud: 'I borrowed, so this became one less.'"
+    - hi: "In a sum with zero (302 − 147), show that we first borrow from the hundreds, and then the tens become 9."
+    - hi: "Check the answer with matchsticks."
+  source: "Team-authored"
+
+- id: num.shoonya_ka_ghar
+  title_hi: When the top digit is zero
+  title_en: When the top digit is zero
+  domain: numeracy
+  levels: [ops_regroup]
+  targets: [zero_in_subtraction, SUB_ZERO_MINUS_N_IS_ZERO, SUB_ZERO_MINUS_N_IS_N, M9]
+  materials: [matchsticks, rubber_bands]
+  steps:
+    - hi: "Make 40: 4 bundles, 0 loose sticks. Question: 40 − 17."
+    - hi: "Ask: how can we take 7 from empty ones? Open a bundle — now we have 10 loose sticks."
+    - hi: "Show that the answer cannot be 0 or 7. Count with sticks to see why it is 23."
+  source: "Team-authored"
+
+- id: num.das_hue_to_bandal
+  title_hi: Ten loose sticks make a bundle (carrying)
+  title_en: Ten loose make a bundle (carrying)
+  domain: numeracy
+  levels: [ops_regroup]
+  targets: [M7, carry_concept, ADD_NO_CARRY, ADD_CARRY_WRITE_BOTH]
+  materials: [matchsticks, rubber_bands, slate, chalk]
+  steps:
+    - hi: "Make 47 + 38 with matchsticks. First add the loose sticks: 7 + 8 = 15."
+    - hi: "Ask: what can we make from 15 loose sticks? 1 bundle and 5 loose."
+    - hi: "Put the new bundle in the tens pile — this is the 'carry'. Total: 8 bundles 5 sticks = 85."
+    - hi: "On the slate, write the carried 1 small, above the tens."
+  source: "Adapted from Pratham TaRL operations with bundles (public)"
+
+- id: num.ikai_dahai_khane
+  title_hi: Tens and ones boxes
+  title_en: Place-value columns on the floor
+  domain: numeracy
+  levels: [number_99, ops_basic]
+  targets: [M5, place_value, ADD_LEFT_ALIGN]
+  materials: [chalk, body_movement]
+  steps:
+    - hi: "Draw two boxes on the floor with chalk: Tens | Ones."
+    - hi: "Children act as digit cards and stand in the right box: 52 and 7 — the 7 always goes in ones!"
+    - hi: "Then write it the same way on the slate and add."
+  source: "Team-authored"
+
+- id: num.sankhya_daud
+  title_hi: Number race
+  title_en: Number recognition race
+  domain: numeracy
+  levels: [beginner, number_20, number_99]
+  targets: [M1, M2]
+  materials: [blackboard, chalk, body_movement]
+  steps:
+    - hi: "Write 8-10 numbers on the board."
+    - hi: "Say a number. Two children run and touch it."
+    - hi: "The child who touches it first says the next number."
+  source: "Adapted from Pratham number games (public)"
+
+- id: num.ulti_sankhya
+  title_hi: Not the reverse number!
+  title_en: Not the reverse!
+  domain: numeracy
+  levels: [number_20, number_99]
+  targets: [NUM_REVERSAL, number_writing, ANSWER_REVERSED_ADD, ANSWER_REVERSED_SUB, M2]
+  materials: [matchsticks, rubber_bands, paper_cards]
+  steps:
+    - hi: "Write 47 and 74 on cards. Ask children to make both with matchsticks."
+    - hi: "Ask: which one has more bundles? The first digit tells the number of bundles."
+    - hi: "Children write the number you say. A partner checks it with matchsticks."
+  source: "Team-authored"
+
+- id: num.kaun_bada
+  title_hi: Which is bigger?
+  title_en: Which is bigger?
+  domain: numeracy
+  levels: [number_20, number_99]
+  targets: [M4, NUM_UNITS_COMPARE]
+  materials: [matchsticks, pebbles]
+  steps:
+    - hi: "Take two numbers: 29 and 31. Make both with matchsticks or pebbles."
+    - hi: "Count the bundles first! The one with more bundles is bigger."
+    - hi: "In pairs, children ask each other 5 such questions."
+  source: "Team-authored"
+
+- id: num.kankad_jod_ghatav
+  title_hi: Adding and taking away with pebbles
+  title_en: Pebble addition and subtraction
+  domain: numeracy
+  levels: [number_20, ops_basic]
+  targets: [M6, M8]
+  materials: [pebbles]
+  steps:
+    - hi: "Give each child 20 pebbles."
+    - hi: "Tell a story: '6 birds were sitting. 3 more came.' Children show it with pebbles and give the answer."
+    - hi: "Then a take-away story: 'There were 9 mangoes. 4 were eaten.'"
+  source: "Team-authored"
+
+- id: num.kahani_sawal
+  title_hi: Story sums
+  title_en: Story problems (which operation?)
+  domain: numeracy
+  levels: [ops_basic, ops_regroup]
+  targets: [operation_meaning, OP_SWAP_ADD, OP_SWAP_SUB, M6, M8]
+  materials: [pebbles, body_movement]
+  steps:
+    - hi: "Tell a short story. Children first say: did things go up or go down?"
+    - hi: "If they went up, hands up (add). If they went down, hands down (subtract)."
+    - hi: "Then solve it with pebbles and write it on the slate with the sign (+ or −)."
+  source: "Team-authored"
+
+- id: num.pahada_taali
+  title_hi: Times-table clapping
+  title_en: Times-table clapping
+  domain: numeracy
+  levels: [ops_regroup, three_digit]
+  targets: [M11]
+  materials: [body_movement]
+  steps:
+    - hi: "Table of 2: clap on every second number (1, 2👏, 3, 4👏...)."
+    - hi: "Say the clap numbers aloud — that is the times table."
+    - hi: "Then repeat for 3, 4 and 5."
+  source: "Team-authored"
+
+- id: num.sau_ka_bandal
+  title_hi: Big bundle of hundred
+  title_en: Hundred bundles (3-digit place value)
+  domain: numeracy
+  levels: [ops_regroup, three_digit]
+  targets: [M3, M10, NUM_ZERO_PLACE, NUM_CONCAT]
+  materials: [matchsticks, rubber_bands]
+  steps:
+    - hi: "Put 10 bundles together to make one 'big bundle' (a hundred)."
+    - hi: "Ask children to make 340: 3 big bundles, 4 bundles, 0 loose. Then make 304 — show the difference."
+    - hi: "Children hear 'three hundred and forty' and write it. Use bundles to explain why 30040 is wrong."
+  source: "Adapted from Pratham TaRL bundles-and-sticks (public)"
+
+- id: num.ginti_maala
+  title_hi: Counting string
+  title_en: Counting string
+  domain: numeracy
+  levels: [beginner, number_20]
+  targets: [M1]
+  materials: [pebbles, string]
+  steps:
+    - hi: "Make a line of pebbles on a string or on the floor."
+    - hi: "Children touch and count. They stop at every fifth pebble and say the number."
+    - hi: "Say a number. The child sets aside that many pebbles."
+  source: "Team-authored"

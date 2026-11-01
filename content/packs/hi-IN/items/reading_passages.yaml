@@ -1,0 +1,137 @@
+# Connected text in 3 bands (1: Grade-1 paragraph, 2: Grade-2 story, 3: Grade-3 story) x parallel forms.
+# Original texts written for this pack (no copyright issues). Each has one picture-choice question
+# (literal comprehension, L11). DRAFT — pedagogy lead to vet readability per grade.
+
+- id: hi.p.b1.a
+  type: passage
+  grade: 1
+  band: 1
+  form: a
+  skills: [L9, L10]
+  text: "मेरा नाम रानी है। मेरे घर में एक गाय है। गाय का रंग काला है। वह घास खाती है।"
+  questions:
+    - id: q1
+      prompt_hi: "रानी के घर में कौन सा जानवर है?"
+      answer: "गाय"
+      options:
+        - {value: "गाय", label: "🐄 गाय"}
+        - {value: "कुत्ता", label: "🐕 कुत्ता"}
+        - {value: "बकरी", label: "🐐 बकरी"}
+
+- id: hi.p.b1.b
+  type: passage
+  grade: 1
+  band: 1
+  form: b
+  skills: [L9, L10]
+  text: "आज बारिश हुई। सड़क पर पानी भर गया। बच्चे कागज़ की नाव चला रहे हैं। सब खुश हैं।"
+  questions:
+    - id: q1
+      prompt_hi: "बच्चे क्या चला रहे हैं?"
+      answer: "नाव"
+      options:
+        - {value: "नाव", label: "⛵ नाव"}
+        - {value: "साइकिल", label: "🚲 साइकिल"}
+        - {value: "पतंग", label: "🪁 पतंग"}
+
+- id: hi.p.b1.c
+  type: passage
+  grade: 1
+  band: 1
+  form: c
+  skills: [L9, L10]
+  text: "मोहन के पास एक लाल गेंद है। वह गेंद से खेलता है। उसका कुत्ता भी दौड़ता है। दोनों बहुत खुश हैं।"
+  questions:
+    - id: q1
+      prompt_hi: "मोहन की गेंद किस रंग की है?"
+      answer: "लाल"
+      options:
+        - {value: "लाल", label: "🔴 लाल"}
+        - {value: "हरा", label: "🟢 हरी"}
+        - {value: "नीला", label: "🔵 नीली"}
+
+- id: hi.p.b2.a
+  type: passage
+  grade: 2
+  band: 2
+  form: a
+  skills: [L9, L10]
+  text: >-
+    सीमा रोज़ सुबह स्कूल जाती है। रास्ते में एक बड़ा पेड़ है। पेड़ पर बहुत सारी चिड़िया रहती हैं।
+    एक दिन सीमा ने देखा कि एक छोटी चिड़िया नीचे गिर गई है। सीमा ने उसे धीरे से उठाया और पेड़ के पास
+    रख दिया। चिड़िया की माँ आई और उसे ले गई। सीमा को बहुत अच्छा लगा।
+  questions:
+    - id: q1
+      prompt_hi: "नीचे कौन गिर गया था?"
+      answer: "चिड़िया"
+      options:
+        - {value: "चिड़िया", label: "🐦 चिड़िया"}
+        - {value: "बिल्ली", label: "🐈 बिल्ली"}
+        - {value: "पत्ता", label: "🍃 पत्ता"}
+
+- id: hi.p.b2.b
+  type: passage
+  grade: 2
+  band: 2
+  form: b
+  skills: [L9, L10]
+  text: >-
+    गाँव में एक मेला लगा। अमन अपने दादा जी के साथ मेले में गया। वहाँ झूले थे, मिठाई थी और
+    रंग-बिरंगे गुब्बारे थे। अमन ने एक पीला गुब्बारा लिया। अचानक हवा चली और गुब्बारा उड़ गया। अमन
+    रोने लगा। दादा जी ने हँसकर उसे एक नया गुब्बारा दिलाया।
+  questions:
+    - id: q1
+      prompt_hi: "अमन का गुब्बारा किस रंग का था?"
+      answer: "पीला"
+      options:
+        - {value: "पीला", label: "🟡 पीला"}
+        - {value: "लाल", label: "🔴 लाल"}
+        - {value: "नीला", label: "🔵 नीला"}
+
+- id: hi.p.b3.a
+  type: passage
+  grade: 3
+  band: 3
+  form: a
+  skills: [L9, L10]
+  text: >-
+    एक जंगल में एक प्यासा कौआ रहता था। गर्मी के दिन थे और कहीं पानी नहीं मिल रहा था। उड़ते-उड़ते
+    उसे एक घड़ा दिखाई दिया। घड़े में थोड़ा सा पानी था, पर उसकी चोंच पानी तक नहीं पहुँच रही थी। कौए
+    ने सोचा और पास पड़े कंकड़ एक-एक करके घड़े में डाले। धीरे-धीरे पानी ऊपर आ गया। कौए ने पानी पिया
+    और खुशी से उड़ गया।
+  questions:
+    - id: q1
+      prompt_hi: "कौए ने घड़े में क्या डाला?"
+      answer: "कंकड़"
+      options:
+        - {value: "कंकड़", label: "🪨 कंकड़"}
+        - {value: "पत्ते", label: "🍃 पत्ते"}
+        - {value: "दाने", label: "🌾 दाने"}
+
+- id: hi.p.b3.b
+  type: passage
+  grade: 3
+  band: 3
+  form: b
+  skills: [L9, L10]
+  text: >-
+    रीना के स्कूल में पेड़ लगाने का दिन था। सभी बच्चे अपने साथ एक-एक पौधा लाए। रीना नीम का पौधा
+    लाई थी। उसने गड्ढा खोदा, पौधा लगाया और उसमें पानी डाला। मास्टर जी ने कहा कि पेड़ हमें छाया
+    और साफ़ हवा देते हैं। रीना ने तय किया कि वह रोज़ अपने पौधे को पानी देगी।
+  questions:
+    - id: q1
+      prompt_hi: "रीना कौन सा पौधा लाई थी?"
+      answer: "नीम"
+      options:
+        - {value: "नीम", label: "🌳 नीम"}
+        - {value: "आम", label: "🥭 आम"}
+        - {value: "गुलाब", label: "🌹 गुलाब"}
+
+# Listen-and-repeat control items (guide §6.1.5): Cheenu SAYS the word, no text is shown.
+# A substitution here is a speech/dialect feature, never a reading error.
+- {id: hi.rep.van,    type: repeat, grade: 1, text: "वन",    skills: [L1], probes: [VIS]}
+- {id: hi.rep.sher,   type: repeat, grade: 1, text: "शेर",   skills: [L1]}
+- {id: hi.rep.school, type: repeat, grade: 1, text: "स्कूल", skills: [L1], probes: [CONJ]}
+- {id: hi.rep.bhaalu, type: repeat, grade: 1, text: "भालू",  skills: [L1], probes: [ASP]}
+- {id: hi.rep.khaana, type: repeat, grade: 1, text: "खाना",  skills: [L1], probes: [ASP]}
+- {id: hi.rep.ghadi,  type: repeat, grade: 1, text: "घड़ी",  skills: [L1], probes: [ASP]}

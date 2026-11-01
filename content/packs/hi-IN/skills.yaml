@@ -1,0 +1,171 @@
+# Skill graph for Hindi literacy + early numeracy (Grades 1-3). Guide §7.1.
+# `prior` = initial P(mastery) by grade (rough, ASER-informed); re-estimated from pilot data (EM) later.
+# `nipun`: paraphrase of the NIPUN Bharat Lakshya this node serves.
+#   VERIFY: replace with exact wording + page from the official NIPUN Bharat Guidelines (MoE, 2021).
+skills:
+  - id: L1
+    domain: literacy
+    name_en: Phonological awareness (initial sound, rhyme)
+    name_hi: Sound awareness (first sound, rhyme)
+    prior: {1: 0.5, 2: 0.7, 3: 0.8}
+    nipun: "Grade 1: identifies sounds/aksharas in spoken words (VERIFY)"
+  - id: L2
+    domain: literacy
+    name_en: Vowel aksharas (svar)
+    name_hi: Vowel letters (svar)
+    prior: {1: 0.5, 2: 0.75, 3: 0.85}
+    nipun: "Grade 1: recognises aksharas (VERIFY)"
+  - id: L3
+    domain: literacy
+    name_en: Consonant aksharas (vyanjan)
+    name_hi: Consonant letters (vyanjan)
+    prior: {1: 0.4, 2: 0.65, 3: 0.8}
+    nipun: "Grade 1: recognises aksharas (VERIFY)"
+  - id: L4
+    domain: literacy
+    name_en: Basic matras (ा ि ी)
+    name_hi: Matras (ा ि ी)
+    prereqs: [L2, L3]
+    prior: {1: 0.25, 2: 0.5, 3: 0.7}
+    nipun: "Grade 1-2: reads words with matras (VERIFY)"
+  - id: L5
+    domain: literacy
+    name_en: Further matras (ु ू े ै ो ौ ं ँ)
+    name_hi: Other matras (ु ू े ै ो ौ ं ँ)
+    prereqs: [L4]
+    prior: {1: 0.15, 2: 0.4, 3: 0.6}
+    nipun: "Grade 2: reads words with all matras (VERIFY)"
+  - id: L6
+    domain: literacy
+    name_en: Blending words without matras
+    name_hi: Blending words without matras
+    prereqs: [L3]
+    prior: {1: 0.3, 2: 0.55, 3: 0.7}
+    nipun: "Grade 1: reads simple words (VERIFY)"
+  - id: L7
+    domain: literacy
+    name_en: Reading words with matras
+    name_hi: Reading words with matras
+    prereqs: [L4, L6]
+    prior: {1: 0.15, 2: 0.4, 3: 0.6}
+    weight: 1.2
+    nipun: "Grade 1: reads at least 4-5 simple words (VERIFY)"
+  - id: L8
+    domain: literacy
+    name_en: Conjuncts and र-forms
+    name_hi: Joined letters (conjuncts)
+    prereqs: [L7]
+    prior: {1: 0.05, 2: 0.2, 3: 0.4}
+    nipun: "Grade 2-3: reads words with conjuncts (VERIFY)"
+  - id: L9
+    domain: literacy
+    name_en: Sentence reading
+    name_hi: Reading sentences
+    prereqs: [L7]
+    prior: {1: 0.1, 2: 0.3, 3: 0.5}
+    weight: 1.2
+    nipun: "Grade 1-2: reads short sentences with understanding (VERIFY)"
+  - id: L10
+    domain: literacy
+    name_en: Connected-text fluency (WCPM band)
+    name_hi: Fluent reading (correct words per minute)
+    prereqs: [L9]
+    prior: {1: 0.05, 2: 0.15, 3: 0.3}
+    weight: 1.3
+    nipun: "Grade 2: 45-60 WCPM; Grade 3: >=60 WCPM with meaning (VERIFY)"
+  - id: L11
+    domain: literacy
+    name_en: Literal comprehension
+    name_hi: Reading with understanding
+    prereqs: [L9]
+    prior: {1: 0.1, 2: 0.25, 3: 0.4}
+    nipun: "Grade 2-3: reads with meaning (VERIFY)"
+  - id: M1
+    domain: numeracy
+    name_en: Number recognition 1-20
+    name_hi: Number recognition 1-20
+    prior: {1: 0.6, 2: 0.8, 3: 0.9}
+    nipun: "Grade 1: reads and writes numbers (VERIFY)"
+  - id: M2
+    domain: numeracy
+    name_en: Number recognition 21-99 (place-value reading)
+    name_hi: Number recognition 21-99
+    prereqs: [M1]
+    prior: {1: 0.3, 2: 0.6, 3: 0.75}
+    nipun: "Grade 1: numbers up to 99 (VERIFY)"
+  - id: M3
+    domain: numeracy
+    name_en: Number recognition to 999
+    name_hi: Number recognition up to 999
+    prereqs: [M2]
+    prior: {1: 0.05, 2: 0.25, 3: 0.5}
+    nipun: "Grade 2: numbers up to 999; Grade 3: up to 9999 (VERIFY)"
+  - id: M4
+    domain: numeracy
+    name_en: Comparing numbers
+    name_hi: Comparing numbers
+    prereqs: [M1]
+    prior: {1: 0.4, 2: 0.6, 3: 0.75}
+  - id: M5
+    domain: numeracy
+    name_en: Place value (tens and ones)
+    name_hi: Place value (tens and ones)
+    prereqs: [M2]
+    prior: {1: 0.15, 2: 0.35, 3: 0.55}
+    weight: 1.2
+  - id: M6
+    domain: numeracy
+    name_en: Addition without carry
+    name_hi: Addition without carry
+    prereqs: [M1]
+    prior: {1: 0.2, 2: 0.45, 3: 0.65}
+    nipun: "Grade 1: addition up to 9; Grade 2: up to 99 (VERIFY)"
+  - id: M7
+    domain: numeracy
+    name_en: Addition with carry
+    name_hi: Addition with carry
+    prereqs: [M6, M5]
+    prior: {1: 0.05, 2: 0.25, 3: 0.45}
+    weight: 1.2
+  - id: M8
+    domain: numeracy
+    name_en: Subtraction without borrow
+    name_hi: Subtraction without borrowing
+    prereqs: [M1]
+    prior: {1: 0.15, 2: 0.4, 3: 0.6}
+    nipun: "Grade 1: subtraction up to 9; Grade 2: up to 99 (VERIFY)"
+  - id: M9
+    domain: numeracy
+    name_en: Subtraction with borrow
+    name_hi: Subtraction with borrowing
+    prereqs: [M8, M5]
+    prior: {1: 0.03, 2: 0.15, 3: 0.35}
+    weight: 1.3
+  - id: M10
+    domain: numeracy
+    name_en: 3-digit addition/subtraction
+    name_hi: 3-digit addition and subtraction
+    prereqs: [M7, M9, M3]
+    prior: {1: 0.01, 2: 0.05, 3: 0.2}
+    nipun: "Grade 3: addition/subtraction up to 999 (VERIFY)"
+  - id: M11
+    domain: numeracy
+    name_en: Multiplication facts (tables 2-10)
+    name_hi: Times tables (2-10)
+    prereqs: [M6]
+    prior: {1: 0.01, 2: 0.05, 3: 0.2}
+    nipun: "Grade 3: multiplication tables 2-10 (VERIFY)"
+
+# TaRL-compatible ladders (guide §8.5). A child sits at the highest rung whose skills are all mastered.
+ladders:
+  literacy:
+    - {id: akshara, name_en: Letter, name_hi: Letter, skills: [L2, L3]}
+    - {id: word, name_en: Word, name_hi: Word, skills: [L4, L6, L7]}
+    - {id: paragraph, name_en: Paragraph, name_hi: Paragraph, skills: [L9]}
+    - {id: story, name_en: Story, name_hi: Story, skills: [L10, L11]}
+  numeracy:
+    - {id: number_20, name_en: Numbers 1-20, name_hi: Numbers 1-20, skills: [M1]}
+    - {id: number_99, name_en: Numbers to 99, name_hi: Numbers up to 99, skills: [M2, M4]}
+    - {id: ops_basic, name_en: "+/- without regrouping", name_hi: Simple addition and subtraction, skills: [M6, M8]}
+    - {id: ops_regroup, name_en: "+/- with regrouping", name_hi: "Addition and subtraction with carry/borrow", skills: [M5, M7, M9]}
+    - {id: three_digit, name_en: 3-digit numbers, name_hi: 3-digit numbers, skills: [M3, M10]}

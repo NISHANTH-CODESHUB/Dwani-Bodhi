@@ -1,0 +1,6 @@
+id: hi-IN
+language: hi
+version: "2026.10.1"
+name: Hindi (Devanagari) — FLN Grades 1-3
+maintainers: [pedagogy-lead]
+review_status: draft  # every item/activity must be vetted by the pedagogy lead before field use

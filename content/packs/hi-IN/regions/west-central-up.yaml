@@ -1,0 +1,10 @@
+id: west-central-up
+name: Western / Central UP (Khari Boli, Braj, Awadhi fringe)
+notes: VERIFY with local teachers.
+tolerate:
+  - {from: "श", to: "स"}
+  - {from: "ष", to: "स"}
+  - {from: "ण", to: "न"}
+  - {from: "ज़", to: "ज"}
+  - {from: "फ़", to: "फ"}
+prothesis: true

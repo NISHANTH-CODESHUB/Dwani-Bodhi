@@ -1,0 +1,16 @@
+# WCPM benchmarks per grade (NIPUN Lakshya: Grade 2 ~45-60, Grade 3 >=60 — VERIFY exact wording).
+# Grade 1 has no WCPM Lakshya; 15 WCPM on a short paragraph is used only as a fluency signal.
+wcpm_by_grade: {1: 15, 2: 45, 3: 60}
+passage_band_by_grade: {1: 1, 2: 2, 3: 3}
+# Materials Action Cards may use (guide §6.5) — things every rural classroom already has.
+allowed_materials:
+  - chalk
+  - slate
+  - blackboard
+  - pebbles
+  - matchsticks
+  - rubber_bands
+  - paper_cards
+  - body_movement
+  - bottle_caps
+  - string

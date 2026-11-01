@@ -1,0 +1,216 @@
+# Vetted remedial activity library — literacy (guide §6.5). Action Cards may ONLY pick from here.
+# Sources: adapted from widely used public TaRL/FLN practice (Pratham "Combined Activities", NCERT/SCERT
+# primers) and team-authored. reviewed_by is null until the pedagogy lead signs off.
+
+- id: lit.akshar_dukaan
+  title_hi: Letter shop
+  title_en: Letter shop
+  domain: literacy
+  levels: [beginner, akshara]
+  targets: [L2, L3]
+  materials: [paper_cards, chalk]
+  steps:
+    - hi: "Write 8-10 letters on pieces of paper. Lay them out on the floor like a 'shop'."
+    - hi: "One child is the 'customer' and says: 'I want the letter that makes the sound /म/.'"
+    - hi: "The 'shopkeeper' child picks up the right letter, hands it over and says its sound aloud."
+    - hi: "Take turns so every child is a customer and a shopkeeper."
+  variations_hi: ["Also name a thing that starts with the letter."]
+  source: "Adapted from Pratham TaRL letter games (public)"
+
+- id: lit.awaaz_dhundho
+  title_hi: Hear the sound, find the letter
+  title_en: Hear the sound, find the letter
+  domain: literacy
+  levels: [beginner, akshara]
+  targets: [L1, L3]
+  materials: [blackboard, chalk, body_movement]
+  steps:
+    - hi: "Write 5 letters in big size on the board."
+    - hi: "Say a word, like 'कमल'. Children find the first sound."
+    - hi: "The child who touches the right letter first says the next word."
+  source: "Team-authored"
+
+- id: lit.ungli_se_akshar
+  title_hi: Finger tracing
+  title_en: Finger tracing
+  domain: literacy
+  levels: [beginner, akshara]
+  targets: [L3, READ_VIS]
+  materials: [slate, chalk]
+  steps:
+    - hi: "Write a big letter on the slate. The child traces it with a finger and says its sound."
+    - hi: "Then the child closes their eyes and draws the same letter in the air."
+    - hi: "Put look-alike letters (ब-व, घ-ध) side by side. Ask children to point to the difference."
+  source: "Team-authored (multisensory letter formation)"
+
+- id: lit.matra_chakra
+  title_hi: Matra wheel
+  title_en: Matra wheel
+  domain: literacy
+  levels: [akshara, word]
+  targets: [L4, L5, READ_MDROP]
+  materials: [paper_cards, chalk, blackboard]
+  steps:
+    - hi: "Write one letter in the middle of the board (like क) and the matras (ा ि ी ु ू) around it."
+    - hi: "Point to each matra. Children read together: का, कि, की, कु, कू."
+    - hi: "Now change the middle letter (म, न, प) and repeat."
+    - hi: "At the end, each child reads one letter with a matra and says a word that uses it."
+  source: "Adapted from Pratham barakhadi activities (public)"
+
+- id: lit.chhoti_badi_taali
+  title_hi: Short-long clap
+  title_en: Short-long clap
+  domain: literacy
+  levels: [akshara, word]
+  targets: [READ_MLEN, L4, L5]
+  materials: [body_movement, blackboard, chalk]
+  steps:
+    - hi: "Tell children: one short clap for a short matra (ि, ु), one long clap for a long matra (ी, ू)."
+    - hi: "Write pairs on the board: दिन-दीन, मिल-मील, पिला-पीला. You say a word; children answer with a clap."
+    - hi: "Now children read on their own and clap. If they make a mistake, read the pair together again."
+    - hi: "End the game with words your class often mixes up."
+  source: "Team-authored"
+
+- id: lit.hawa_wali_awaaz
+  title_hi: Breathy sounds
+  title_en: Breathy sounds (aspiration)
+  domain: literacy
+  levels: [akshara, word]
+  targets: [READ_ASP, L3]
+  materials: [paper_cards]
+  steps:
+    - hi: "Each child holds a thin strip of paper in front of their mouth."
+    - hi: "Say 'क' — the strip moves a little. Say 'ख' — the strip moves more (a breathy sound)."
+    - hi: "Play with pairs: क-ख, ग-घ, प-फ, ब-भ, त-थ, द-ध."
+    - hi: "Then read word pairs: फल-पल, भालू-बालू, थाली-ताली."
+  source: "Team-authored (articulatory awareness)"
+
+- id: lit.jodi_pehchano
+  title_hi: Spot the look-alike letters
+  title_en: Look-alike letter sort
+  domain: literacy
+  levels: [akshara, word]
+  targets: [READ_VIS, L3]
+  materials: [paper_cards, chalk]
+  steps:
+    - hi: "Make cards of look-alike letters: ब-व, घ-ध, म-भ, थ-य, ख and 'रव'."
+    - hi: "Children sort the cards into two piles and show where the difference is (a cut line, a loop)."
+    - hi: "Then read words with those letters: बन-वन, घर, धन."
+  source: "Team-authored"
+
+- id: lit.matra_jasoos
+  title_hi: Matra detective
+  title_en: Matra detective
+  domain: literacy
+  levels: [word]
+  targets: [READ_MDROP, READ_MSWAP, L5]
+  materials: [blackboard, chalk]
+  steps:
+    - hi: "Write 6 words on the board. In some, leave out a matra or use the wrong one on purpose (केला → कला)."
+    - hi: "Children act as 'detectives', find the wrong words and add the right matra."
+    - hi: "Everyone reads each corrected word together. Pay attention to the difference between ए-ऐ and ओ-औ (मेला-मैला)."
+  source: "Team-authored"
+
+- id: lit.bindi_khel
+  title_hi: Bindi and chandrabindu game
+  title_en: Nasal mark game
+  domain: literacy
+  levels: [word]
+  targets: [READ_NAS, L5]
+  materials: [blackboard, chalk, body_movement]
+  steps:
+    - hi: "Write pairs: चाँद-चाद, बंदर-बदर, आँख-आख."
+    - hi: "For a word with a bindi or chandrabindu, children touch their nose while reading (a nasal sound)."
+    - hi: "Then read without the action and say which word has the bindi."
+  source: "Team-authored"
+
+- id: lit.judwa_akshar
+  title_hi: Joined letters
+  title_en: Conjunct builder
+  domain: literacy
+  levels: [word, paragraph]
+  targets: [READ_CONJ, L8]
+  materials: [paper_cards, chalk]
+  steps:
+    - hi: "Take two cards: 'प्' (half letter) and 'या'. Show that together they make 'प्या'."
+    - hi: "Children say the half letter quickly and read the whole word: प्यास, प्यार, बच्चा, पत्ता."
+    - hi: "Make sure they do not add an 'इ' in the middle (प्यार, not पियार)."
+  source: "Team-authored"
+
+- id: lit.shabd_seedhi
+  title_hi: Word ladder
+  title_en: Word ladder
+  domain: literacy
+  levels: [akshara, word]
+  targets: [L6, L7]
+  materials: [blackboard, chalk]
+  steps:
+    - hi: "Write a short word: 'कल'. Change one letter to make a new word: 'जल', 'जम', 'नम'."
+    - hi: "Children sound out each new word letter by letter, then read it whole."
+    - hi: "Let children make the next word on the ladder themselves."
+  source: "Adapted from Pratham word-building games (public)"
+
+- id: lit.shabd_rail
+  title_hi: Word train
+  title_en: Word train
+  domain: literacy
+  levels: [akshara, word]
+  targets: [L6, L1]
+  materials: [paper_cards, body_movement]
+  steps:
+    - hi: "Give each child a letter card."
+    - hi: "Say a word (like 'मटर'). Children who have those letters stand in order as the 'coaches' of a train."
+    - hi: "The whole 'train' says the word letter by letter, then the full word."
+  source: "Team-authored"
+
+- id: lit.dohra_padhna
+  title_hi: Repeated reading
+  title_en: Repeated reading
+  domain: literacy
+  levels: [word, paragraph]
+  targets: [L9, L10]
+  materials: [blackboard, chalk]
+  steps:
+    - hi: "Write 3-4 short sentences on the board."
+    - hi: "First you read slowly, pointing with your finger. Then children read with you. Then the group reads alone."
+    - hi: "The third time, read a little faster. Ask children who stop and start to read each whole word in one go."
+  source: "Adapted from repeated-reading fluency practice"
+
+- id: lit.jodi_me_padhna
+  title_hi: Reading in pairs
+  title_en: Paired reading
+  domain: literacy
+  levels: [paragraph, story]
+  targets: [L10, L9]
+  materials: [blackboard, chalk]
+  steps:
+    - hi: "Seat a fast reader next to a slow reader."
+    - hi: "They take turns reading one sentence each. When there is a mistake, the partner points to it and helps."
+    - hi: "At the end, the slow reader reads the whole paragraph alone."
+  source: "Adapted from Pratham TaRL paragraph-level activities (public)"
+
+- id: lit.kahani_baat
+  title_hi: Story talk
+  title_en: Story talk
+  domain: literacy
+  levels: [paragraph, story]
+  targets: [L11]
+  materials: [blackboard, body_movement]
+  steps:
+    - hi: "Children read or listen to a short story."
+    - hi: "Ask: Who? What happened? Where? Then ask one 'why' question."
+    - hi: "Children act out a part of the story."
+  source: "Adapted from Pratham story-level activities (public)"
+
+- id: lit.vakya_banao
+  title_hi: Build a sentence
+  title_en: Build a sentence
+  domain: literacy
+  levels: [word, paragraph]
+  targets: [L9, L7]
+  materials: [paper_cards]
+  steps:
+    - hi: "Make 6-8 word cards (मोर, नाचता, है, बच्चा, पढ़ता…)."
+    - hi: "Each group puts cards together to make a sentence and reads it."
+    - hi: "Each group reads and checks another group's sentence."
+  source: "Team-authored"

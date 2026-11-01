@@ -1,0 +1,64 @@
+# Single-VM deployment (pilot). Scale out by raising replicas or moving services to separate nodes:
+#   docker compose up -d --scale worker-speech=3
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dhwani
+      POSTGRES_USER: dhwani
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dhwani"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build: { context: ., dockerfile: infra/Dockerfile.api }
+    env_file: .env
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql+psycopg://dhwani:${POSTGRES_PASSWORD}@db:5432/dhwani
+      ALLOW_SIMULATED_AUDIO: "false"
+    volumes: [blobs:/data]
+    depends_on: { db: { condition: service_healthy } }
+    restart: unless-stopped
+
+  worker-speech:  # CPU-heavy: ECCL acoustic scoring
+    build: { context: ., dockerfile: infra/Dockerfile.api, args: { SPEECH: "1" } }
+    env_file: .env
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql+psycopg://dhwani:${POSTGRES_PASSWORD}@db:5432/dhwani
+      SPEECH_BACKEND: wav2vec2
+      HF_HOME: /data/hf
+    volumes: [blobs:/data]
+    command: ["python", "-m", "app.jobs.worker", "--queues", "speech"]
+    depends_on: [api]
+    restart: unless-stopped
+
+  worker:  # vision, learner model, Claude calls + periodic maintenance (exactly one with --scheduler)
+    build: { context: ., dockerfile: infra/Dockerfile.api }
+    env_file: .env
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql+psycopg://dhwani:${POSTGRES_PASSWORD}@db:5432/dhwani
+    volumes: [blobs:/data]
+    command: ["python", "-m", "app.jobs.worker", "--queues", "vision,learner,llm", "--scheduler"]
+    depends_on: [api]
+    restart: unless-stopped
+
+  web:
+    build: { context: ., dockerfile: infra/Dockerfile.web }
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports: ["80:80", "443:443"]
+    volumes: [caddy:/data]
+    depends_on: [api]
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  blobs: {}
+  caddy: {}

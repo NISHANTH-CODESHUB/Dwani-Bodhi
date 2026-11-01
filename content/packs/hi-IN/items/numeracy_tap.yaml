@@ -1,0 +1,108 @@
+# On-phone numeracy: Cheenu says a number, the child taps it among 4 options. Every distractor is
+# diagnostic (guide §6.3.1): reversal (47→74), zero placement (340→304), concatenation (340→3040).
+- id: m.tap.7
+  type: tap_number
+  grade: 1
+  skills: [M1]
+  prompt_hi: "Touch seven"
+  answer: "7"
+  options: [{value: "7"}, {value: "1"}, {value: "9"}, {value: "4"}]
+- id: m.tap.12
+  type: tap_number
+  grade: 1
+  skills: [M1]
+  prompt_hi: "Touch twelve"
+  answer: "12"
+  options: [{value: "12"}, {value: "21", probe: NUM_REVERSAL}, {value: "2"}, {value: "13"}]
+- id: m.tap.19
+  type: tap_number
+  grade: 1
+  skills: [M1]
+  prompt_hi: "Touch nineteen"
+  answer: "19"
+  options: [{value: "19"}, {value: "91", probe: NUM_REVERSAL}, {value: "9"}, {value: "29"}]
+- id: m.tap.25
+  type: tap_number
+  grade: 1
+  skills: [M2]
+  prompt_hi: "Touch twenty-five"
+  answer: "25"
+  options: [{value: "25"}, {value: "52", probe: NUM_REVERSAL}, {value: "205", probe: NUM_CONCAT}, {value: "35"}]
+- id: m.tap.47
+  type: tap_number
+  grade: 1
+  skills: [M2]
+  prompt_hi: "Touch forty-seven"
+  answer: "47"
+  options: [{value: "47"}, {value: "74", probe: NUM_REVERSAL}, {value: "37"}, {value: "57"}]
+- id: m.tap.52
+  type: tap_number
+  grade: 2
+  skills: [M2]
+  prompt_hi: "Touch fifty-two"
+  answer: "52"
+  options: [{value: "52"}, {value: "25", probe: NUM_REVERSAL}, {value: "502", probe: NUM_CONCAT}, {value: "62"}]
+- id: m.tap.68
+  type: tap_number
+  grade: 2
+  skills: [M2]
+  prompt_hi: "Touch sixty-eight"
+  answer: "68"
+  options: [{value: "68"}, {value: "86", probe: NUM_REVERSAL}, {value: "58"}, {value: "78"}]
+- id: m.tap.89
+  type: tap_number
+  grade: 2
+  skills: [M2]
+  prompt_hi: "Touch eighty-nine"
+  answer: "89"
+  options: [{value: "89"}, {value: "98", probe: NUM_REVERSAL}, {value: "809", probe: NUM_CONCAT}, {value: "79"}]
+- id: m.tap.105
+  type: tap_number
+  grade: 2
+  skills: [M3]
+  prompt_hi: "Touch one hundred and five"
+  answer: "105"
+  options: [{value: "105"}, {value: "1005", probe: NUM_CONCAT}, {value: "150", probe: NUM_ZERO_PLACE}, {value: "15"}]
+- id: m.tap.340
+  type: tap_number
+  grade: 3
+  skills: [M3]
+  prompt_hi: "Touch three hundred and forty"
+  answer: "340"
+  options: [{value: "340"}, {value: "304", probe: NUM_ZERO_PLACE}, {value: "30040", probe: NUM_CONCAT}, {value: "430"}]
+- id: m.tap.706
+  type: tap_number
+  grade: 3
+  skills: [M3]
+  prompt_hi: "Touch seven hundred and six"
+  answer: "706"
+  options: [{value: "706"}, {value: "760", probe: NUM_ZERO_PLACE}, {value: "7006", probe: NUM_CONCAT}, {value: "76"}]
+# Comparison: picking the number with the larger *units* digit reveals NUM_UNITS_COMPARE.
+- id: m.cmp.29_31
+  type: tap_compare
+  grade: 1
+  skills: [M4, M5]
+  prompt_hi: "Which number is bigger?"
+  answer: "31"
+  options: [{value: "29", probe: NUM_UNITS_COMPARE}, {value: "31"}]
+- id: m.cmp.56_65
+  type: tap_compare
+  grade: 1
+  skills: [M4, M5]
+  prompt_hi: "Which number is bigger?"
+  answer: "65"
+  options: [{value: "56", probe: NUM_UNITS_COMPARE}, {value: "65"}]
+- id: m.cmp.48_81
+  type: tap_compare
+  grade: 2
+  skills: [M4, M5]
+  prompt_hi: "Which number is bigger?"
+  answer: "81"
+  options: [{value: "48", probe: NUM_UNITS_COMPARE}, {value: "81"}]
+- id: m.cmp.7_17
+  type: tap_compare
+  grade: 1
+  skills: [M4]
+  prompt_hi: "Which number is bigger?"
+  answer: "17"
+  options: [{value: "7"}, {value: "17"}]

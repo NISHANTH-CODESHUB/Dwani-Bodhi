@@ -1,0 +1,37 @@
+# Akshara naming: the akshara is shown, Cheenu says "इसकी आवाज़ बोलो". `probes` = confusions it can reveal.
+# DRAFT — pedagogy lead to vet ordering against the state's Grade 1 primer.
+- {id: hi.ak.a,   type: akshara, grade: 1, text: "अ", skills: [L2]}
+- {id: hi.ak.aa,  type: akshara, grade: 1, text: "आ", skills: [L2]}
+- {id: hi.ak.i,   type: akshara, grade: 1, text: "इ", skills: [L2], probes: [MLEN]}
+- {id: hi.ak.ii,  type: akshara, grade: 1, text: "ई", skills: [L2], probes: [MLEN]}
+- {id: hi.ak.u,   type: akshara, grade: 1, text: "उ", skills: [L2], probes: [MLEN]}
+- {id: hi.ak.uu,  type: akshara, grade: 1, text: "ऊ", skills: [L2], probes: [MLEN]}
+- {id: hi.ak.e,   type: akshara, grade: 1, text: "ए", skills: [L2], probes: [MSWAP]}
+- {id: hi.ak.ai,  type: akshara, grade: 1, text: "ऐ", skills: [L2], probes: [MSWAP]}
+- {id: hi.ak.o,   type: akshara, grade: 1, text: "ओ", skills: [L2], probes: [MSWAP]}
+- {id: hi.ak.ka,  type: akshara, grade: 1, text: "क", skills: [L3], probes: [ASP]}
+- {id: hi.ak.kha, type: akshara, grade: 1, text: "ख", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.ga,  type: akshara, grade: 1, text: "ग", skills: [L3], probes: [ASP]}
+- {id: hi.ak.gha, type: akshara, grade: 1, text: "घ", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.cha, type: akshara, grade: 1, text: "च", skills: [L3], probes: [ASP]}
+- {id: hi.ak.ja,  type: akshara, grade: 1, text: "ज", skills: [L3], probes: [ASP]}
+- {id: hi.ak.ta_r, type: akshara, grade: 1, text: "ट", skills: [L3], probes: [ASP]}
+- {id: hi.ak.da_r, type: akshara, grade: 1, text: "ड", skills: [L3], probes: [ASP]}
+- {id: hi.ak.ta,  type: akshara, grade: 1, text: "त", skills: [L3], probes: [ASP]}
+- {id: hi.ak.tha, type: akshara, grade: 1, text: "थ", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.da,  type: akshara, grade: 1, text: "द", skills: [L3], probes: [ASP]}
+- {id: hi.ak.dha, type: akshara, grade: 1, text: "ध", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.na,  type: akshara, grade: 1, text: "न", skills: [L3]}
+- {id: hi.ak.pa,  type: akshara, grade: 1, text: "प", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.pha, type: akshara, grade: 1, text: "फ", skills: [L3], probes: [ASP]}
+- {id: hi.ak.ba,  type: akshara, grade: 1, text: "ब", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.bha, type: akshara, grade: 1, text: "भ", skills: [L3], probes: [ASP, VIS]}
+- {id: hi.ak.ma,  type: akshara, grade: 1, text: "म", skills: [L3], probes: [VIS]}
+- {id: hi.ak.ya,  type: akshara, grade: 1, text: "य", skills: [L3], probes: [VIS]}
+- {id: hi.ak.ra,  type: akshara, grade: 1, text: "र", skills: [L3]}
+- {id: hi.ak.la,  type: akshara, grade: 1, text: "ल", skills: [L3]}
+- {id: hi.ak.va,  type: akshara, grade: 1, text: "व", skills: [L3], probes: [VIS]}
+- {id: hi.ak.sa,  type: akshara, grade: 1, text: "स", skills: [L3]}
+- {id: hi.ak.ha,  type: akshara, grade: 1, text: "ह", skills: [L3]}
+- {id: hi.ak.sha, type: akshara, grade: 2, text: "श", skills: [L3]}
+- {id: hi.ak.ksha_s, type: akshara, grade: 2, text: "ष", skills: [L3], probes: [VIS]}

@@ -1,0 +1,27 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: services/api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check app --select F,E9
+      - run: pytest -q
+      - name: content pack validates
+        run: python -c "from app.content.pack import load_pack; from pathlib import Path; e=load_pack(Path('../../content/packs/hi-IN')).validate(); assert not e, e"
+      - name: migrations apply cleanly
+        run: DATABASE_URL=sqlite:////tmp/ci.db alembic upgrade head
+  web:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: apps/web } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm ci
+      - run: npm test -- --run
+      - run: npm run build
