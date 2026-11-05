@@ -1,3 +1,4 @@
+
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -8,7 +9,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: false, // registered from src/main.tsx via virtual:pwa-register
+      injectRegister: false,
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       manifest: {
         name: 'Dhwani-Bodhi',
@@ -25,11 +26,15 @@ export default defineConfig({
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          {
+            src: '/icons/maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
       workbox: {
-        // App shell + Cheenu's pre-recorded prompts are precached; API data lives in IndexedDB (Dexie).
         globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest,mp3,json}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/v1\//, /^\/health/, /^\/docs/],
@@ -40,10 +45,27 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
-  // `npm run dev` / `npm run preview`: forward API calls to the local FastAPI server (README "Run it locally").
-  server: { proxy: { '/v1': 'http://localhost:8000', '/health': 'http://localhost:8000' } },
-  preview: { proxy: { '/v1': 'http://localhost:8000', '/health': 'http://localhost:8000' } },
-  build: { target: 'es2020', sourcemap: false },
+
+  server: {
+    proxy: {
+      '/v1': 'http://localhost:8000',
+      '/health': 'http://localhost:8000',
+    },
+  },
+
+  preview: {
+    allowedHosts: ['dwani-bodhi-1.onrender.com'],
+    proxy: {
+      '/v1': 'http://localhost:8000',
+      '/health': 'http://localhost:8000',
+    },
+  },
+
+  build: {
+    target: 'es2020',
+    sourcemap: false,
+  },
+
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
