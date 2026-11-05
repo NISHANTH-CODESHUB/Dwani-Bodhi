@@ -54,7 +54,7 @@ export default defineConfig({
   },
 
   preview: {
-    allowedHosts: ['dwani-bodhi-1.onrender.com'],
+    allowedHosts: ['dwani-bodhi-1.onrender.com', 'dwani-bodhi-2.onrender.com',],
     proxy: {
       '/v1': 'http://localhost:8000',
       '/health': 'http://localhost:8000',
